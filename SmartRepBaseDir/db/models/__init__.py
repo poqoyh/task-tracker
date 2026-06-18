@@ -1,9 +1,8 @@
 __all__ = (
     "User",
-    # "Skill",
+    "Skill",
 )
 
 
 from .user import User
-
-# from .skill import Skill
+from .skill import Skill

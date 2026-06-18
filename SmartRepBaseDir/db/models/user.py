@@ -5,8 +5,10 @@ from datetime import datetime
 
 from db.base import Base
 
+from db.mixins.integer_id_pk import IntIDPKMixin
 
-class User(Base):
+
+class User(IntIDPKMixin, Base):
     email: Mapped[str] = mapped_column(
         String(256),
         unique=True,

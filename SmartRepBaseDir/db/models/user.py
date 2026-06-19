@@ -1,5 +1,5 @@
 from sqlalchemy import String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from datetime import datetime
 
@@ -23,4 +23,9 @@ class User(IntIDPKMixin, Base):
     created_at: Mapped[datetime] = mapped_column(
         server_default=func.now(),
         nullable=False,
+    )
+
+    user_skills = relationship(
+        "UserSkill",
+        back_populates="user",
     )

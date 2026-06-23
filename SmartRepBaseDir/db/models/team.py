@@ -3,7 +3,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.base import Base
 
+
 from db.mixins.integer_id_pk import IntIDPKMixin
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from db.models.user import User
 
 
 class Team(IntIDPKMixin, Base):
@@ -17,3 +23,5 @@ class Team(IntIDPKMixin, Base):
         String(1024),
         nullable=False,
     )
+
+    users: Mapped[list["User"]] = relationship(back_populates="team")

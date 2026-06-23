@@ -1,4 +1,4 @@
-from sqlalchemy import String, func
+from sqlalchemy import String, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from datetime import datetime
@@ -6,6 +6,11 @@ from datetime import datetime
 from db.base import Base
 
 from db.mixins.integer_id_pk import IntIDPKMixin
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from db.models.team import Team
 
 
 class User(IntIDPKMixin, Base):
@@ -29,3 +34,9 @@ class User(IntIDPKMixin, Base):
         "UserSkill",
         back_populates="user",
     )
+
+    team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"),
+        nullable=True,
+    )
+    team: Mapped["Team"] = relationship(back_populates="users")

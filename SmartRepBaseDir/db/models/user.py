@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from db.models.team import Team
+    from db.models import Task
 
 
 class User(IntIDPKMixin, Base):
@@ -40,3 +41,5 @@ class User(IntIDPKMixin, Base):
         nullable=True,
     )
     team: Mapped["Team"] = relationship(back_populates="users")
+
+    tasks: Mapped[list["Task"]] = relationship(back_populates="user")

@@ -8,6 +8,24 @@ from db.mixins.integer_id_pk import IntIDPKMixin
 
 from typing import TYPE_CHECKING
 
+from enum import Enum
+from sqlalchemy import Enum as SQLEnum
+
+
+class TaskStatus(str, Enum):
+    CREATED = "created"
+    IN_PROGRESS = "in_progress"
+    REVIEW = "review"
+    DONE = "done"
+
+
+class TaskPriority(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
 if TYPE_CHECKING:
     from db.models.user import User
 
@@ -23,9 +41,23 @@ class Task(IntIDPKMixin, Base):
         nullable=True,
     )
 
-    status: Mapped[str] = mapped_column(
-        String(32),
-        default="created",
+    status: Mapped[TaskStatus] = mapped_column(
+        SQLEnum(
+            TaskStatus,
+            values_callable=lambda enum: [item.value for item in enum],
+            name="taskstatus",
+        ),
+        default=TaskStatus.CREATED,
+        nullable=False,
+    )
+
+    priority: Mapped[TaskPriority] = mapped_column(
+        SQLEnum(
+            TaskPriority,
+            values_callable=lambda enum: [item.value for item in enum],
+            name="taskpriority",
+        ),
+        default=TaskPriority.MEDIUM,
         nullable=False,
     )
 

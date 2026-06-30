@@ -1,6 +1,10 @@
+from pathlib import Path
+
 from pydantic import BaseModel
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class RunConfig(BaseModel):
@@ -28,6 +32,11 @@ class DataBaseConfig(BaseModel):
     }
 
 
+class Auth(BaseModel):
+    private_key_path: Path = BASE_DIR / "certs" / "private.pem"
+    public_key_paths: Path = BASE_DIR / "certs" / "public.pem"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env.template", ".env"),
@@ -38,6 +47,8 @@ class Settings(BaseSettings):
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
     db: DataBaseConfig
+
+    auth: Auth = Auth()
 
 
 settings = Settings()

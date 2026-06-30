@@ -35,6 +35,7 @@ class DataBaseConfig(BaseModel):
 class Auth(BaseModel):
     private_key_path: Path = BASE_DIR / "certs" / "private.pem"
     public_key_paths: Path = BASE_DIR / "certs" / "public.pem"
+    algorithm: str = "RS256"
 
 
 class Settings(BaseSettings):

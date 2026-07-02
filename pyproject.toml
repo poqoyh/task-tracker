@@ -10,6 +10,7 @@ sqlalchemy = {extras = ["asyncio"], version = "^2.0.49"}
 asyncpg = "^0.31.0"
 alembic = "^1.18.4"
 pyjwt = {extras = ["crypto"], version = "^2.13.0"}
+bcrypt = "^5.0.0"
 
 [dependency-groups]
 dev = [

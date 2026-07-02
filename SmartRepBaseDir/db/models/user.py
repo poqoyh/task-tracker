@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from db.models.team import Team
-    from db.models import Task
+    from db.models.task import Task
 
 
 class User(IntIDPKMixin, Base):
@@ -26,6 +26,12 @@ class User(IntIDPKMixin, Base):
         unique=True,
         nullable=False,
     )
+
+    hashed_password: Mapped[str] = mapped_column(
+        String(256),
+        nullable=False,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         server_default=func.now(),
         nullable=False,

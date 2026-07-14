@@ -14,6 +14,7 @@ class RunConfig(BaseModel):
 
 class ApiPrefix(BaseModel):
     api_prefix: str = "/api"
+    users: str = "/users"
 
 
 class DataBaseConfig(BaseModel):
@@ -36,6 +37,7 @@ class Auth(BaseModel):
     private_key_path: Path = BASE_DIR / "certs" / "private.pem"
     public_key_paths: Path = BASE_DIR / "certs" / "public.pem"
     algorithm: str = "RS256"
+    access_token_expire_minutes: int = 15
 
 
 class Settings(BaseSettings):

@@ -79,6 +79,14 @@ async def login(
     return {"message": "Login successful"}
 
 
+@router.post("/logout/")
+async def logout(response: Response):
+    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="refresh_token")
+
+    return {"message": "Logout successful"}
+
+
 @router.get("/me/", response_model=UserShortRead)
 async def me(
     current_user: User = Depends(get_current_user),

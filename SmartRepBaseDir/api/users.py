@@ -8,7 +8,7 @@ from fastapi import (
     Response,
 )
 
-from auth.dependencies import get_current_user
+from auth.dependencies import get_current_user, get_user_for_refresh_token
 
 from auth.jwt import (
     create_access_token,
@@ -84,3 +84,20 @@ async def me(
     current_user: User = Depends(get_current_user),
 ):
     return current_user
+
+
+@router.post("/refresh/")
+async def refresh(
+    response: Response,
+    current_user: User = Depends(get_user_for_refresh_token),
+):
+    access_token = create_access_token(current_user)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+    )
+
+    return {"message": "Token updated successfully"}

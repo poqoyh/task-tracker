@@ -15,6 +15,7 @@ class RunConfig(BaseModel):
 class ApiPrefix(BaseModel):
     api_prefix: str = "/api"
     users: str = "/users"
+    skills: str = "/skills"
 
 
 class DataBaseConfig(BaseModel):

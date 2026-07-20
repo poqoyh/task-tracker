@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from crud_repositories.user import (
     create_user,
     get_user_by_identifier,
+    get_user_by_id,
 )
 
 from auth.hashing import hash_password, validate_password
@@ -49,3 +50,19 @@ async def authenticate_user(
             detail="Invalid credentials",
         )
     return user
+
+
+async def get_user_by_id_service(
+    session: AsyncSession,
+    user_id: int,
+):
+    user = await get_user_by_id(
+        session=session,
+        user_id=user_id,
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )

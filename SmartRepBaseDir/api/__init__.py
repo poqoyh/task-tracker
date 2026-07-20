@@ -10,4 +10,4 @@ router = APIRouter()
 
 router.include_router(users_router, prefix=settings.api.users)
 router.include_router(skills_router, prefix=settings.api.skills)
-router.include_router(users_skills_router)
+router.include_router(users_skills_router, prefix=settings.api.user_skills)

@@ -26,7 +26,7 @@ from service.skills import (
 router = APIRouter(tags=["Skills"])
 
 
-@router.post("/skills/", response_model=SkillShortRead)
+@router.post("/", response_model=SkillShortRead)
 async def skill_create(
     creating_skill: SkillCreate,
     session: Annotated[
@@ -37,7 +37,7 @@ async def skill_create(
     return await create_skill(session=session, creating_skill=creating_skill)
 
 
-@router.get("/skills/", response_model=list[SkillShortRead])
+@router.get("/", response_model=list[SkillShortRead])
 async def get_skills(
     session: Annotated[
         AsyncSession,
@@ -47,7 +47,7 @@ async def get_skills(
     return await get_all_skills(session)
 
 
-@router.get("/skills/{skill_id}/", response_model=SkillShortRead)
+@router.get("/{skill_id}/", response_model=SkillShortRead)
 async def get_skill(
     skill_id: int,
     session: Annotated[
@@ -58,7 +58,7 @@ async def get_skill(
     return await get_skill_by_id_service(session=session, skill_id=skill_id)
 
 
-@router.get("/skills/by-name/{skill_name}", response_model=SkillShortRead)
+@router.get("/by-name/{skill_name}", response_model=SkillShortRead)
 async def get_skill(
     skill_name: str,
     session: Annotated[
@@ -69,7 +69,7 @@ async def get_skill(
     return await get_skill_by_name_service(session=session, skill_name=skill_name)
 
 
-@router.patch("/skills/{skill_id}", response_model=SkillShortRead)
+@router.patch("/{skill_id}", response_model=SkillShortRead)
 async def update_skill_name(
     skill_id: int,
     new_skill_name: str,
@@ -85,7 +85,7 @@ async def update_skill_name(
     )
 
 
-@router.delete("/skills/{skill_id}")
+@router.delete("/{skill_id}")
 async def delete_by_id(
     skill_id: int,
     session: Annotated[

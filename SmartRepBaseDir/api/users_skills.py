@@ -16,7 +16,7 @@ from crud_repositories.user_skill import get_users_skills
 router = APIRouter(tags=["UsersSkills"])
 
 
-@router.post("/user/{user_id}/skill/")
+@router.post("/{user_id}/skill/")
 async def add_skill_to_user(
     session: Annotated[
         AsyncSession,
@@ -30,7 +30,7 @@ async def add_skill_to_user(
     )
 
 
-@router.get("/user/{user_id}/skills/", response_model=list[UserSkillRead])
+@router.get("/{user_id}/skills/", response_model=list[UserSkillRead])
 async def get_user_skills(
     session: Annotated[
         AsyncSession,
@@ -41,7 +41,7 @@ async def get_user_skills(
     return await get_users_skills(session=session, user_id=user_id)
 
 
-@router.get("/users/me/skills/", response_model=list[UserSkillRead])
+@router.get("/me/skills/", response_model=list[UserSkillRead])
 async def get_my_skills(
     session: Annotated[
         AsyncSession,
@@ -52,7 +52,7 @@ async def get_my_skills(
     return await get_user_skills(session=session, user_id=int(current_user.id))
 
 
-@router.delete("/user/{user_id}/skills/{skill_id}")
+@router.delete("/{user_id}/skills/{skill_id}")
 async def delete_user_skill(
     session: Annotated[
         AsyncSession,

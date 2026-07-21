@@ -20,5 +20,3 @@ class UserLogin(BaseModel):
 class UserShortRead(UserBase):
     id: int
     created_at: datetime
-    # user_skills: list[str] | None
-    # team: str | None

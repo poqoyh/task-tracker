@@ -40,3 +40,18 @@ async def get_task_by_id(
 
     task = await session.execute(stmt)
     return task.scalar_one_or_none()
+
+
+async def update_task(
+    session: AsyncSession,
+    task: Task,
+    task_update: dict,
+) -> Task:
+
+    for field, value in task_update.items():
+        setattr(task, field, value)
+
+    await session.commit()
+    await session.refresh(task)
+
+    return task

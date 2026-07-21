@@ -66,3 +66,5 @@ async def get_user_by_id_service(
             status_code=404,
             detail="User not found",
         )
+
+    return user

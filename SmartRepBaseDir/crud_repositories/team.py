@@ -30,3 +30,32 @@ async def get_team_by_id(
     result = await session.execute(stmt)
 
     return result.scalar_one_or_none()
+
+
+async def get_all_teams(
+    session: AsyncSession,
+) -> list[Team] | list[None]:
+
+    stmt = select(Team).order_by(Team.name)
+
+    result = await session.scalars(stmt)
+
+    return result.all()
+
+
+async def update_team(
+    session: AsyncSession,
+    team: Team,
+    new_team_name: str | None,
+    new_team_description: str | None,
+) -> Team:
+
+    if new_team_name:
+        team.name = new_team_name
+    if new_team_description:
+        team.description = new_team_description
+
+    await session.commit()
+    await session.refresh(team)
+
+    return team

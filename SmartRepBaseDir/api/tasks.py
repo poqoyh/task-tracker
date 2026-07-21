@@ -11,8 +11,8 @@ from crud_repositories.task import create_task, get_tasks
 
 from db import db_helper
 
-from schemas.tasks import TaskRead, TaskCreate
-from service.tasks import get_task_by_id_service
+from schemas.tasks import TaskRead, TaskCreate, TaskUpdate
+from service.tasks import get_task_by_id_service, update_task_service
 
 router = APIRouter(tags=["Tasks"])
 
@@ -47,3 +47,19 @@ async def get_task(
     task_id: int,
 ):
     return await get_task_by_id_service(session=session, task_id=task_id)
+
+
+@router.patch("/{task_id}")
+async def update_task(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    task_id: int,
+    task_update: TaskUpdate,
+):
+    return await update_task_service(
+        session=session,
+        task_id=task_id,
+        task_update=task_update,
+    )

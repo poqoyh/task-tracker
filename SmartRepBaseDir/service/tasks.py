@@ -1,7 +1,8 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from crud_repositories.task import get_task_by_id, update_task
+from auth.service import get_user_by_id_service
+from crud_repositories.task import get_task_by_id, update_task, assign_task_to_user
 from db.models import Task
 from schemas.tasks import TaskUpdate
 
@@ -33,11 +34,6 @@ async def update_task_service(
         session=session,
         task_id=task_id,
     )
-    if task is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Task not found.",
-        )
 
     update_data = task_update.model_dump(exclude_unset=True)
 
@@ -45,4 +41,32 @@ async def update_task_service(
         session=session,
         task=task,
         task_update=update_data,
+    )
+
+
+async def assign_task_to_user_service(
+    session: AsyncSession,
+    task_id: int,
+    user_id: int,
+):
+    task = await get_task_by_id_service(
+        session=session,
+        task_id=task_id,
+    )
+
+    if task.user_id is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Task already assigned.",
+        )
+
+    await get_user_by_id_service(
+        session=session,
+        user_id=user_id,
+    )
+
+    return await assign_task_to_user(
+        session=session,
+        task=task,
+        user_id=user_id,
     )

@@ -12,7 +12,11 @@ from crud_repositories.task import create_task, get_tasks
 from db import db_helper
 
 from schemas.tasks import TaskRead, TaskCreate, TaskUpdate
-from service.tasks import get_task_by_id_service, update_task_service
+from service.tasks import (
+    get_task_by_id_service,
+    update_task_service,
+    assign_task_to_user_service,
+)
 
 router = APIRouter(tags=["Tasks"])
 
@@ -62,4 +66,21 @@ async def update_task(
         session=session,
         task_id=task_id,
         task_update=task_update,
+    )
+
+
+@router.post("/{task_id}/{user_id}")
+async def assign_task_to_user(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    task_id: int,
+    user_id: int,
+):
+
+    return await assign_task_to_user_service(
+        session=session,
+        task_id=task_id,
+        user_id=user_id,
     )

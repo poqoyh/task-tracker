@@ -73,7 +73,6 @@ async def get_user_by_id_service(
     return user
 
 
-
 async def update_user_service(
     session: AsyncSession,
     user_id: int,

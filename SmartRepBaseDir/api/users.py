@@ -16,9 +16,12 @@ from auth.jwt import (
 )
 
 from auth.service import (
-    register_user,
-    authenticate_user,
+    register_user_service,
+    authenticate_user_service,
+    get_user_by_id_service,
+    update_user_service,
 )
+from crud_repositories.user import get_all_users
 
 from db import db_helper
 from db.models import User
@@ -27,12 +30,13 @@ from schemas.user import (
     UserCreate,
     UserLogin,
     UserShortRead,
+    UserUpdate,
 )
 
 router = APIRouter(tags=["Users"])
 
 
-@router.post("/register/")
+@router.post("/register")
 async def register(
     user_create: UserCreate,
     session: Annotated[
@@ -40,13 +44,10 @@ async def register(
         Depends(db_helper.session_getter),
     ],
 ):
-    return await register_user(
-        session=session,
-        creating_user=user_create,
-    )
+    return await register_user_service(session=session, creating_user=user_create)
 
 
-@router.post("/login/")
+@router.post("/login")
 async def login(
     response: Response,
     user_login: UserLogin,
@@ -55,7 +56,7 @@ async def login(
         Depends(db_helper.session_getter),
     ],
 ):
-    user = await authenticate_user(session, user_login)
+    user = await authenticate_user_service(session, user_login)
 
     access_token = create_access_token(user)
     refresh_token = create_refresh_token(user)
@@ -79,7 +80,7 @@ async def login(
     return {"message": "Login successful"}
 
 
-@router.post("/logout/")
+@router.post("/logout")
 async def logout(response: Response):
     response.delete_cookie(key="access_token")
     response.delete_cookie(key="refresh_token")
@@ -87,14 +88,7 @@ async def logout(response: Response):
     return {"message": "Logout successful"}
 
 
-@router.get("/me/", response_model=UserShortRead)
-async def me(
-    current_user: User = Depends(get_current_user),
-):
-    return current_user
-
-
-@router.post("/refresh/")
+@router.post("/refresh")
 async def refresh(
     response: Response,
     current_user: User = Depends(get_user_for_refresh_token),
@@ -109,3 +103,47 @@ async def refresh(
     )
 
     return {"message": "Token updated successfully"}
+
+
+@router.get("/", response_model=list[UserShortRead])
+async def get_users(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+):
+    return await get_all_users(session)
+
+
+@router.get("/me/", response_model=UserShortRead)
+async def me(
+    current_user: User = Depends(get_current_user),
+):
+    return current_user
+
+
+@router.get("/{user_id}", response_model=UserShortRead)
+async def get_user_by_id(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    user_id: int,
+):
+    return await get_user_by_id_service(session=session, user_id=user_id)
+
+
+@router.patch("/{user_id}", response_model=UserShortRead)
+async def update_user(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    user_id: int,
+    user_update_data: UserUpdate,
+):
+    return await update_user_service(
+        session=session,
+        user_id=user_id,
+        user_update_data=user_update_data,
+    )

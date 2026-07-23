@@ -20,3 +20,8 @@ class UserLogin(BaseModel):
 class UserShortRead(UserBase):
     id: int
     created_at: datetime
+
+
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    username: str | None = None

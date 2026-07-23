@@ -6,17 +6,20 @@ from crud_repositories.user import (
     create_user,
     get_user_by_identifier,
     get_user_by_id,
+    update_user,
 )
 
 from auth.hashing import hash_password, validate_password
+from db.models import User
 
 from schemas.user import (
     UserCreate,
     UserLogin,
+    UserUpdate,
 )
 
 
-async def register_user(
+async def register_user_service(
     session: AsyncSession,
     creating_user: UserCreate,
 ):
@@ -35,7 +38,7 @@ async def register_user(
     }
 
 
-async def authenticate_user(
+async def authenticate_user_service(
     session: AsyncSession,
     user_login: UserLogin,
 ):
@@ -68,3 +71,20 @@ async def get_user_by_id_service(
         )
 
     return user
+
+
+
+async def update_user_service(
+    session: AsyncSession,
+    user_id: int,
+    user_update_data: UserUpdate,
+):
+    user = await get_user_by_id_service(session=session, user_id=user_id)
+
+    update_data = user_update_data.model_dump(exclude_unset=True)
+
+    return await update_user(
+        session=session,
+        user=user,
+        update_data=update_data,
+    )

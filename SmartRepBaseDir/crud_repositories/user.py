@@ -25,6 +25,17 @@ async def create_user(
     return user
 
 
+async def get_all_users(
+    session: AsyncSession,
+) -> list[User]:
+
+    stmt = select(User).order_by(User.id)
+
+    result = await session.scalars(stmt)
+
+    return result.all()
+
+
 async def get_user_by_id(
     session: AsyncSession,
     user_id: int,

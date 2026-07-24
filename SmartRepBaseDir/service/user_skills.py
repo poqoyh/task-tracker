@@ -6,6 +6,7 @@ from crud_repositories.user_skill import (
     create_skill_for_user,
     get_user_skill,
     delete_user_skill,
+    update_experience,
 )
 from schemas.user_skill import UserSkillCreate
 
@@ -42,6 +43,31 @@ async def assign_skill_to_user_service(
         skill_id=data.skill_id,
         user_id=user_id,
         experience_months=data.experience_months,
+    )
+
+
+async def update_experience_months_service(
+    session: AsyncSession,
+    user_id: int,
+    new_experience: int,
+    skill_id: int,
+):
+    await get_user_by_id_service(session=session, user_id=user_id)
+
+    await get_skill_by_id_service(session=session, skill_id=skill_id)
+
+    user_skill = await get_user_skill(
+        session=session, user_id=user_id, skill_id=skill_id
+    )
+    if user_skill is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User haven't this skill.",
+        )
+    return await update_experience(
+        session=session,
+        user_skill=user_skill,
+        new_experience=new_experience,
     )
 
 

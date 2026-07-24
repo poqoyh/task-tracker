@@ -56,6 +56,17 @@ async def get_users_skills(
     return result.all()
 
 
+async def skill_has_user(
+    session: AsyncSession,
+    skill_id: int,
+):
+    stmt = select(UserSkill).where(UserSkill.skill_id == skill_id).limit(1)
+
+    result = await session.scalars(stmt)
+
+    return result.first() is not None
+
+
 async def update_experience(
     session: AsyncSession,
     user_skill: UserSkill,

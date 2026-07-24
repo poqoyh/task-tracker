@@ -9,7 +9,11 @@ from fastapi import (
 
 from db import db_helper
 
-from schemas.skill import SkillCreate, SkillShortRead
+from schemas.skill import (
+    SkillCreate,
+    SkillShortRead,
+    SkillUpdate,
+)
 
 from crud_repositories.skill import (
     create_skill,
@@ -18,9 +22,9 @@ from crud_repositories.skill import (
 
 from service.skills import (
     delete_skill_service,
-    update_skill_name_service,
     get_skill_by_id_service,
     get_skill_by_name_service,
+    update_skill_service,
 )
 
 router = APIRouter(tags=["Skills"])
@@ -70,17 +74,17 @@ async def get_skill(
 
 
 @router.patch("/{skill_id}", response_model=SkillShortRead)
-async def update_skill_name(
+async def update_skill(
     skill_id: int,
-    new_skill_name: str,
+    update_data: SkillUpdate,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
 ):
-    return await update_skill_name_service(
+    return await update_skill_service(
         skill_id=skill_id,
-        new_skill_name=new_skill_name,
+        update_data=update_data,
         session=session,
     )
 

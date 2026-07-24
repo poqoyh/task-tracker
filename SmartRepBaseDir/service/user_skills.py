@@ -7,6 +7,7 @@ from crud_repositories.user_skill import (
     get_user_skill,
     delete_user_skill,
     update_experience,
+    skill_has_user,
 )
 from schemas.user_skill import UserSkillCreate
 

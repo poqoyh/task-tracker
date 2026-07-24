@@ -4,49 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from crud_repositories.skill import (
     get_skill_by_id,
-    change_skill_name,
     delete_skill,
     get_skill_by_name,
+    update_skill,
 )
+from crud_repositories.user_skill import skill_has_user
 
-
-async def update_skill_name_service(
-    skill_id: int,
-    new_skill_name: str,
-    session: AsyncSession,
-):
-    skill = await get_skill_by_id(
-        session,
-        skill_id,
-    )
-
-    if skill is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Skill not found",
-        )
-
-    return await change_skill_name(
-        session=session, skill=skill, new_skill_name=new_skill_name
-    )
-
-
-async def delete_skill_service(
-    skill_id: int,
-    session: AsyncSession,
-):
-    skill = await get_skill_by_id(
-        session,
-        skill_id,
-    )
-
-    if skill is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Skill not found",
-        )
-
-    await delete_skill(session, skill)
+from schemas.skill import SkillUpdate
 
 
 async def get_skill_by_id_service(
@@ -83,3 +47,30 @@ async def get_skill_by_name_service(
         )
 
     return skill
+
+
+async def update_skill_service(
+    skill_id: int,
+    update_data: SkillUpdate,
+    session: AsyncSession,
+):
+    skill = await get_skill_by_id_service(skill_id=skill_id, session=session)
+
+    data = update_data.model_dump(exclude_unset=True)
+
+    return await update_skill(session=session, skill=skill, update_data=data)
+
+
+async def delete_skill_service(
+    skill_id: int,
+    session: AsyncSession,
+):
+    if await skill_has_user(skill_id=skill_id, session=session):
+        raise HTTPException(
+            status_code=409,
+            detail="Skill has a users",
+        )
+
+    skill = await get_skill_by_id_service(skill_id=skill_id, session=session)
+
+    await delete_skill(session, skill)

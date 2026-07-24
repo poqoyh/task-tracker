@@ -56,12 +56,13 @@ async def get_all_skills(
     return result.all()
 
 
-async def change_skill_name(
+async def update_skill(
     session: AsyncSession,
     skill: Skill,
-    new_skill_name: str,
+    update_data: dict,
 ):
-    skill.name = new_skill_name
+    for field, value in update_data.items():
+        setattr(skill, field, value)
 
     await session.commit()
     await session.refresh(skill)

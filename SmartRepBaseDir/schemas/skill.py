@@ -10,7 +10,7 @@ class SkillCreate(SkillBase):
 
 
 class SkillUpdate(SkillBase):
-    name: str = None
+    name: str | None = None
 
 
 class SkillShortRead(SkillBase):

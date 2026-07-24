@@ -56,6 +56,19 @@ async def get_users_skills(
     return result.all()
 
 
+async def update_experience(
+    session: AsyncSession,
+    user_skill: UserSkill,
+    new_experience: int,
+):
+    user_skill.experience_months = new_experience
+
+    await session.commit()
+    await session.refresh(user_skill)
+
+    return user_skill
+
+
 async def delete_user_skill(
     session: AsyncSession,
     skill: UserSkill,

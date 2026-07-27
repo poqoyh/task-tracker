@@ -86,4 +86,10 @@ async def unassign_task_from_user_service(
         task_id=task_id,
     )
 
+    if task.user_id is None:
+        raise HTTPException(
+            status_code=409,
+            detail="Task is not assigned.",
+        )
+
     return await unassign_task(session=session, task=task)

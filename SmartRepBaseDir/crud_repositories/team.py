@@ -46,14 +46,11 @@ async def get_all_teams(
 async def update_team(
     session: AsyncSession,
     team: Team,
-    new_team_name: str | None,
-    new_team_description: str | None,
+    update_data: dict,
 ) -> Team:
 
-    if new_team_name:
-        team.name = new_team_name
-    if new_team_description:
-        team.description = new_team_description
+    for field, value in update_data.items():
+        setattr(team, field, value)
 
     await session.commit()
     await session.refresh(team)

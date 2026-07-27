@@ -8,6 +8,7 @@ from crud_repositories.team import (
     update_team,
 )
 from crud_repositories.user import get_user_by_id_with_team
+from schemas.team import TeamUpdate
 
 
 async def get_team_by_id_service(
@@ -28,19 +29,19 @@ async def get_team_by_id_service(
 async def update_team_service(
     session: AsyncSession,
     team_id: int,
-    new_team_name: str | None,
-    new_team_description: str | None,
+    update_data: TeamUpdate,
 ):
     team = await get_team_by_id_service(
         session=session,
         team_id=team_id,
     )
 
+    update_data = update_data.model_dump(exclude_unset=True)
+
     return await update_team(
         session=session,
         team=team,
-        new_team_name=new_team_name,
-        new_team_description=new_team_description,
+        update_data=update_data,
     )
 
 

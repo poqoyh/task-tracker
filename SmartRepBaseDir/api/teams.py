@@ -9,7 +9,7 @@ from fastapi import (
 
 from db import db_helper
 
-from schemas.team import TeamCreate, TeamRead
+from schemas.team import TeamCreate, TeamRead, TeamUpdate
 
 from crud_repositories.team import (
     create_team,
@@ -71,14 +71,12 @@ async def update_team(
         Depends(db_helper.session_getter),
     ],
     team_id: int,
-    new_team_name: str | None = None,
-    new_team_description: str | None = None,
+    update_data: TeamUpdate,
 ):
     return await update_team_service(
         session=session,
         team_id=team_id,
-        new_team_name=new_team_name,
-        new_team_description=new_team_description,
+        update_data=update_data,
     )
 
 

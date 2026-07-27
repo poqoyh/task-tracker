@@ -22,7 +22,7 @@ async def create_task(
 
 async def get_tasks(
     session: AsyncSession,
-) -> list[Task] | list[None]:
+) -> list[Task]:
 
     stmt = select(Task).order_by(Task.created_at)
 
@@ -38,8 +38,8 @@ async def get_task_by_id(
 
     stmt = select(Task).where(Task.id == task_id)
 
-    task = await session.execute(stmt)
-    return task.scalar_one_or_none()
+    task = await session.scalars(stmt)
+    return task.one_or_none()
 
 
 async def update_task(

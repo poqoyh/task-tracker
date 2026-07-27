@@ -42,7 +42,7 @@ async def get_all_tasks(
     return await get_tasks(session=session)
 
 
-@router.get("/{task_id}/", response_model=TaskRead)
+@router.get("/{task_id}", response_model=TaskRead)
 async def get_task(
     session: Annotated[
         AsyncSession,
@@ -53,7 +53,7 @@ async def get_task(
     return await get_task_by_id_service(session=session, task_id=task_id)
 
 
-@router.patch("/{task_id}")
+@router.patch("/{task_id}", response_model=TaskRead)
 async def update_task(
     session: Annotated[
         AsyncSession,
@@ -69,7 +69,7 @@ async def update_task(
     )
 
 
-@router.post("/{task_id}/{user_id}")
+@router.post("/{task_id}/assign/{user_id}")
 async def assign_task_to_user(
     session: Annotated[
         AsyncSession,

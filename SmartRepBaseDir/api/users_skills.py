@@ -26,7 +26,10 @@ async def get_my_skills(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[
+        User,
+        Depends(get_current_user),
+    ],
 ):
     return await get_users_skills(session=session, user_id=int(current_user.id))
 

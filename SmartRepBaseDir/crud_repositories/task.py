@@ -61,8 +61,20 @@ async def assign_task_to_user(
     session: AsyncSession,
     task: Task,
     user_id: int,
-):
+) -> Task:
     task.user_id = user_id
+
+    await session.commit()
+    await session.refresh(task)
+
+    return task
+
+
+async def unassign_task(
+    session: AsyncSession,
+    task: Task,
+) -> Task:
+    task.user_id = None
 
     await session.commit()
     await session.refresh(task)

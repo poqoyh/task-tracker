@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models import Team
+from db.models import Team, User
 from schemas.team import TeamCreate
 
 
@@ -56,3 +56,16 @@ async def update_team(
     await session.refresh(team)
 
     return team
+
+
+async def assign_user_to_team(
+    session: AsyncSession,
+    user: User,
+    team_id: int,
+):
+    user.team_id = team_id
+
+    await session.commit()
+    await session.refresh(user)
+
+    return user

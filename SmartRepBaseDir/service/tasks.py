@@ -2,7 +2,12 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.service import get_user_by_id_service
-from crud_repositories.task import get_task_by_id, update_task, assign_task_to_user
+from crud_repositories.task import (
+    get_task_by_id,
+    update_task,
+    assign_task_to_user,
+    unassign_task,
+)
 from db.models import Task
 from schemas.tasks import TaskUpdate
 
@@ -70,3 +75,15 @@ async def assign_task_to_user_service(
         task=task,
         user_id=user_id,
     )
+
+
+async def unassign_task_from_user_service(
+    session: AsyncSession,
+    task_id: int,
+):
+    task = await get_task_by_id_service(
+        session=session,
+        task_id=task_id,
+    )
+
+    return await unassign_task(session=session, task=task)

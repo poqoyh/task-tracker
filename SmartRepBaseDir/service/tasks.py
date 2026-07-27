@@ -7,6 +7,7 @@ from crud_repositories.task import (
     update_task,
     assign_task_to_user,
     unassign_task,
+    get_users_tasks,
 )
 from db.models import Task
 from schemas.tasks import TaskUpdate
@@ -28,6 +29,18 @@ async def get_task_by_id_service(
         )
 
     return task
+
+
+async def get_users_tasks_service(
+    session: AsyncSession,
+    user_id: int,
+):
+    await get_user_by_id_service(
+        session=session,
+        user_id=user_id,
+    )
+
+    return await get_users_tasks(session=session, user_id=user_id)
 
 
 async def update_task_service(

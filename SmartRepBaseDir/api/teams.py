@@ -80,6 +80,7 @@ async def update_team(
     )
 
 
+# Return full user
 @router.post("/{user_id}/{team_id}", response_model=UserShortRead)
 async def assign_user_to_team(
     session: Annotated[

@@ -17,6 +17,7 @@ from service.tasks import (
     update_task_service,
     assign_task_to_user_service,
     unassign_task_from_user_service,
+    get_users_tasks_service,
 )
 
 router = APIRouter(tags=["Tasks"])
@@ -41,6 +42,17 @@ async def get_all_tasks(
     ],
 ):
     return await get_tasks(session=session)
+
+
+@router.get("/users/{user_id}/tasks", response_model=list[TaskRead])
+async def get_user_tasks(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    user_id: int,
+):
+    return await get_users_tasks_service(session=session, user_id=user_id)
 
 
 @router.get("/{task_id}", response_model=TaskRead)

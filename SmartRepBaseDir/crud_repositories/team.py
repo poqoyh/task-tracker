@@ -62,8 +62,20 @@ async def assign_user_to_team(
     session: AsyncSession,
     user: User,
     team_id: int,
-):
+) -> User:
     user.team_id = team_id
+
+    await session.commit()
+    await session.refresh(user)
+
+    return user
+
+
+async def remove_user_from_team(
+    session: AsyncSession,
+    user: User,
+) -> User:
+    user.team_id = None
 
     await session.commit()
     await session.refresh(user)

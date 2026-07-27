@@ -21,7 +21,6 @@ class TaskUpdate(BaseModel):
     description: str | None = None
     status: TaskStatus | None = None
     priority: TaskPriority | None = None
-    user_id: int | None = None
 
 
 class TaskRead(TaskBase):

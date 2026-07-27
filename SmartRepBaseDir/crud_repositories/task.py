@@ -31,6 +31,16 @@ async def get_tasks(
     return result.all()
 
 
+async def get_users_tasks(
+    session: AsyncSession,
+    user_id: int,
+) -> list[Task]:
+    stmt = select(Task).where(Task.user_id == user_id).order_by(Task.created_at)
+
+    result = await session.scalars(stmt)
+    return result.all()
+
+
 async def get_task_by_id(
     session: AsyncSession,
     task_id: int,

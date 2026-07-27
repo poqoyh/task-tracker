@@ -16,6 +16,7 @@ from service.tasks import (
     get_task_by_id_service,
     update_task_service,
     assign_task_to_user_service,
+    unassign_task_from_user_service,
 )
 
 router = APIRouter(tags=["Tasks"])
@@ -83,4 +84,18 @@ async def assign_task_to_user(
         session=session,
         task_id=task_id,
         user_id=user_id,
+    )
+
+
+@router.patch("/task/{task_id}/unassign")
+async def unassign_task(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    task_id: int,
+):
+    return await unassign_task_from_user_service(
+        session=session,
+        task_id=task_id,
     )

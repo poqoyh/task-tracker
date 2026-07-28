@@ -2,13 +2,14 @@ from fastapi import HTTPException
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from crud_repositories.user import get_user_by_id_with_skills
 from crud_repositories.user_skill import (
     create_skill_for_user,
     get_user_skill,
     delete_user_skill,
     update_experience,
-    skill_has_user,
 )
+
 from schemas.user_skill import UserSkillCreate
 
 from service.skills import get_skill_by_id_service
@@ -39,12 +40,14 @@ async def assign_skill_to_user_service(
             detail="User already has this skill",
         )
 
-    return await create_skill_for_user(
+    await create_skill_for_user(
         session=session,
         skill_id=data.skill_id,
         user_id=user_id,
         experience_months=data.experience_months,
     )
+
+    return await get_user_by_id_with_skills(session=session, user_id=user_id)
 
 
 async def update_experience_months_service(

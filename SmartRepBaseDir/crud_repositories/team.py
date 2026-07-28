@@ -32,6 +32,17 @@ async def get_team_by_id(
     return result.scalar_one_or_none()
 
 
+async def get_team_members(
+    session: AsyncSession,
+    team_id: int,
+) -> list[User]:
+    stmt = select(User).where(User.team_id == team_id).order_by(User.id)
+
+    result = await session.scalars(stmt)
+
+    return result.all()
+
+
 async def get_all_teams(
     session: AsyncSession,
 ) -> list[Team] | list[None]:

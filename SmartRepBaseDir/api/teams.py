@@ -7,7 +7,9 @@ from fastapi import (
     Depends,
 )
 
+from auth.dependencies import get_current_user
 from db import db_helper
+from db.models import User
 
 from schemas.team import TeamCreate, TeamRead, TeamUpdate
 
@@ -22,6 +24,8 @@ from service.teams import (
     update_team_service,
     assign_user_to_team_service,
     remove_user_from_team_service,
+    get_team_members_service,
+    get_current_user_team_service,
 )
 
 router = APIRouter(tags=["Teams"])
@@ -51,6 +55,22 @@ async def get_teams(
     return await get_all_teams(session=session)
 
 
+@router.get("/me/team/", response_model=TeamRead)
+async def get_my_team(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    current_user: Annotated[
+        User,
+        Depends(get_current_user),
+    ],
+):
+    return await get_current_user_team_service(
+        session=session, user_id=int(current_user.id)
+    )
+
+
 @router.get("/{team_id}/", response_model=TeamRead)
 async def get_team(
     team_id: int,
@@ -63,6 +83,17 @@ async def get_team(
         session=session,
         team_id=team_id,
     )
+
+
+@router.get("/{team_id}/members", response_model=list[UserShortRead])
+async def get_team_members(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    team_id: int,
+):
+    return await get_team_members_service(session=session, team_id=team_id)
 
 
 @router.patch("/{team_id}/", response_model=TeamRead)

@@ -45,7 +45,7 @@ async def get_team_members(
 
 async def get_all_teams(
     session: AsyncSession,
-) -> list[Team] | list[None]:
+) -> list[Team]:
 
     stmt = select(Team).order_by(Team.name)
 

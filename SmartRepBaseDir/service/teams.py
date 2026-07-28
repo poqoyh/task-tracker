@@ -112,6 +112,12 @@ async def remove_user_from_team_service(
         user_id=user_id,
     )
 
+    if user.team_id is None:
+        raise HTTPException(
+            status_code=409,
+            detail="User is not in a team",
+        )
+
     return await remove_user_from_team(
         session=session,
         user=user,

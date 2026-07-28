@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from auth.dependencies import get_current_user
 from db import db_helper
 from db.models import User
+from schemas.user import UserReadWithSkills
 from schemas.user_skill import UserSkillCreate, UserSkillRead
 
 from service.user_skills import (
@@ -45,7 +46,7 @@ async def get_user_skills(
     return await get_users_skills(session=session, user_id=user_id)
 
 
-@router.post("/{user_id}/skills", response_model=UserSkillRead)
+@router.post("/{user_id}/skills", response_model=UserReadWithSkills)
 async def add_skill_to_user(
     session: Annotated[
         AsyncSession,

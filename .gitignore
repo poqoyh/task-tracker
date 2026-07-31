@@ -150,7 +150,7 @@ activemq-data/
 *.sage.py
 
 # Environments
-SmartRepBaseDir/.env
+task-trecker/.env
 .envrc
 .venv
 env/

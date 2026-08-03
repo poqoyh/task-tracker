@@ -21,7 +21,7 @@ from auth.service import (
     get_user_by_id_service,
     update_user_service,
 )
-from crud_repositories.user import get_all_users
+from crud_repositories.user import get_all_users, get_user_profile
 
 from db import db_helper
 from db.models import User
@@ -31,6 +31,7 @@ from schemas.user import (
     UserLogin,
     UserShortRead,
     UserUpdate,
+    UserProfileRead,
 )
 
 router = APIRouter(tags=["Users"])
@@ -115,11 +116,25 @@ async def get_users(
     return await get_all_users(session)
 
 
-@router.get("/me/", response_model=UserShortRead)
+@router.get("/me", response_model=UserShortRead)
 async def me(
     current_user: User = Depends(get_current_user),
 ):
     return current_user
+
+
+@router.get("/profile", response_model=UserProfileRead)
+async def profile(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    current_user: User = Depends(get_current_user),
+):
+    return await get_user_profile(
+        session=session,
+        user_id=current_user.id,
+    )
 
 
 @router.get("/{user_id}", response_model=UserShortRead)

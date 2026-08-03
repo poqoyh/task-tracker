@@ -10,7 +10,7 @@ from crud_repositories.team import (
     remove_user_from_team,
     get_team_members,
 )
-from crud_repositories.user import get_user_by_id_with_team
+
 from schemas.team import TeamUpdate
 
 

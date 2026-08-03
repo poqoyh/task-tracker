@@ -73,6 +73,24 @@ async def get_user_by_id_with_skills(
     return result.one_or_none()
 
 
+async def get_user_profile(
+        session: AsyncSession,
+        user_id: int,
+) -> User | None:
+    stmt = (select(User)
+            .where(User.id == user_id)
+            .options(
+            selectinload(User.user_skills).selectinload(UserSkill.skill),
+        selectinload(User.team),
+        selectinload(User.tasks)
+                    )
+            )
+
+    result = await session.scalars(stmt)
+
+    return result.one_or_none()
+
+
 async def get_user_by_identifier(
     identifier: str,
     session: AsyncSession,

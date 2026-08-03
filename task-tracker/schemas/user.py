@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr
 
+from schemas.tasks import TaskRead
+from schemas.team import TeamRead
 from schemas.user_skill import UserSkillRead
 
 
@@ -27,6 +29,13 @@ class UserShortRead(UserBase):
 class UserReadWithSkills(UserBase):
     username: str
     user_skills: list[UserSkillRead]
+
+
+class UserProfileRead(UserBase):
+    created_at: datetime
+    user_skills: list[UserSkillRead]
+    team: TeamRead | None
+    tasks: list[TaskRead]
 
 
 class UserUpdate(BaseModel):

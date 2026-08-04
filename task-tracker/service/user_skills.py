@@ -68,11 +68,13 @@ async def update_experience_months_service(
             status_code=404,
             detail="User haven't this skill.",
         )
-    return await update_experience(
+    await update_experience(
         session=session,
         user_skill=user_skill,
         new_experience=new_experience,
     )
+
+    return await get_user_by_id_with_skills(session=session, user_id=user_id)
 
 
 async def delete_user_skill_service(

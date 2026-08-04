@@ -60,7 +60,7 @@ async def add_skill_to_user(
     )
 
 
-@router.patch("/{user_id}/skills/{skill_id}")
+@router.patch("/{user_id}/skills/{skill_id}", response_model=UserReadWithSkills)
 async def update_user_skill(
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
     user_id: int,

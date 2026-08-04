@@ -31,6 +31,11 @@ class UserReadWithSkills(BaseModel):
     user_skills: list[UserSkillRead]
 
 
+class UserReadWithTeam(BaseModel):
+    username: str
+    team: TeamRead
+
+
 class UserProfileRead(UserBase):
     created_at: datetime
     user_skills: list[UserSkillRead]

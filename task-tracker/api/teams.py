@@ -17,7 +17,7 @@ from crud_repositories.team import (
     create_team,
     get_all_teams,
 )
-from schemas.user import UserShortRead
+from schemas.user import UserShortRead, UserReadWithTeam
 
 from service.teams import (
     get_team_by_id_service,
@@ -112,7 +112,7 @@ async def update_team(
     )
 
 
-@router.post("/{user_id}/{team_id}", response_model=UserShortRead)
+@router.patch("/{user_id}/{team_id}", response_model=UserReadWithTeam)
 async def assign_user_to_team(
     session: Annotated[
         AsyncSession,

@@ -10,6 +10,7 @@ from crud_repositories.team import (
     remove_user_from_team,
     get_team_members,
 )
+from crud_repositories.user import get_user_by_id_with_team
 
 from schemas.team import TeamUpdate
 
@@ -96,11 +97,13 @@ async def assign_user_to_team_service(
             detail="User already in a team",
         )
 
-    return await assign_user_to_team(
+    await assign_user_to_team(
         session=session,
         user=user,
         team_id=team_id,
     )
+
+    return await get_user_by_id_with_team(session=session, user_id=user_id)
 
 
 async def remove_user_from_team_service(

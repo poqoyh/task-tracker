@@ -26,7 +26,7 @@ class UserShortRead(UserBase):
     created_at: datetime
 
 
-class UserReadWithSkills(UserBase):
+class UserReadWithSkills(BaseModel):
     username: str
     user_skills: list[UserSkillRead]
 

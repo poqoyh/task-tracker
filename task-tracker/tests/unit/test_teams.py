@@ -4,7 +4,12 @@ import pytest
 from fastapi import HTTPException
 
 from db.models import User, Team
-from service.teams import assign_user_to_team_service, get_team_by_id_service
+from schemas.team import TeamUpdate
+from service.teams import (
+    assign_user_to_team_service,
+    get_team_by_id_service,
+    update_team_service,
+)
 
 """
 GET TEAM BY ID
@@ -57,6 +62,80 @@ async def test_get_team_by_id_if_team_not_found():
             session=session,
             team_id=404,
         )
+
+
+"""
+UPDATE TEAM SERVICE
+"""
+
+
+@pytest.mark.asyncio
+async def test_update_team_service_success():
+    session = AsyncMock()
+
+    old_team = Team(id=1, name="Old team", description="Old team description")
+    updated_team = Team(id=1, name="Updated team", description="Old team description")
+
+    update_shema = TeamUpdate(name="Updated team")
+
+    with (
+        patch(
+            "service.teams.get_team_by_id_service",
+            new=AsyncMock(return_value=old_team),
+        ) as get_team_by_id_mock,
+        patch(
+            "service.teams.update_team",
+            new=AsyncMock(return_value=updated_team),
+        ) as update_team_mock,
+    ):
+        result = await update_team_service(
+            session=session,
+            team_id=1,
+            update_data=update_shema,
+        )
+
+        assert result == updated_team
+
+        get_team_by_id_mock.assert_awaited_once_with(
+            session=session,
+            team_id=1,
+        )
+
+        update_team_mock.assert_awaited_once_with(
+            session=session, team=old_team, update_data={"name": "Updated team"}
+        )
+
+
+@pytest.mark.asyncio
+async def test_update_team_service_when_team_not_found():
+
+    session = AsyncMock()
+
+    update_schema = TeamUpdate(name="Updated name")
+
+    with (
+        patch(
+            "service.teams.get_team_by_id_service",
+            side_effect=HTTPException(status_code=404, detail="Team not found."),
+        ) as get_team_mock,
+        patch("service.teams.update_team", new=AsyncMock()) as update_team_mock,
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await update_team_service(
+                session=session,
+                team_id=404,
+                update_data=update_schema,
+            )
+
+        assert exc_info.value.status_code == 404
+        assert exc_info.value.detail == "Team not found."
+
+        get_team_mock.assert_awaited_once_with(
+            session=session,
+            team_id=404,
+        )
+
+        update_team_mock.assert_not_awaited()
 
 
 """

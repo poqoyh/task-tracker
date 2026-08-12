@@ -3,8 +3,61 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import HTTPException
 
-from db.models import User
-from service.teams import assign_user_to_team_service
+from db.models import User, Team
+from service.teams import assign_user_to_team_service, get_team_by_id_service
+
+"""
+GET TEAM BY ID
+"""
+
+
+@pytest.mark.asyncio
+async def test_get_team_by_id_success():
+    session = AsyncMock()
+
+    team = Team(id=1, name="TestTeam", description="Description for test team")
+
+    with (
+        patch(
+            "service.teams.get_team_by_id", new=AsyncMock(return_value=team)
+        ) as get_team_by_id_mock,
+    ):
+        result = await get_team_by_id_service(
+            session=session,
+            team_id=1,
+        )
+
+        assert result == team
+
+        get_team_by_id_mock.assert_awaited_once_with(
+            session=session,
+            team_id=1,
+        )
+
+
+@pytest.mark.asyncio
+async def test_get_team_by_id_if_team_not_found():
+    session = AsyncMock()
+
+    with (
+        patch(
+            "service.teams.get_team_by_id",
+            new=AsyncMock(return_value=None),
+        ) as get_team_by_id_mock,
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await get_team_by_id_service(
+                session=session,
+                team_id=404,
+            )
+        assert exc_info.value.status_code == 404
+        assert exc_info.value.detail == "Team not found."
+
+        get_team_by_id_mock.assert_awaited_once_with(
+            session=session,
+            team_id=404,
+        )
+
 
 """
 ASSIGN USER TO TEAM

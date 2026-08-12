@@ -19,7 +19,7 @@ async def get_team_by_id_service(
     session: AsyncSession,
     team_id: int,
 ):
-    team = await get_team_by_id(session, team_id)
+    team = await get_team_by_id(session=session, team_id=team_id)
 
     if team is None:
         raise HTTPException(

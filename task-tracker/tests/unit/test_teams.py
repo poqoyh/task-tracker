@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
+from more_itertools.more import side_effect
 
 from db.models import User, Team
 from schemas.team import TeamUpdate
@@ -346,5 +347,48 @@ async def test_assign_user_to_team_user_already_in_team():
             team_id=5,
         )
 
+        assign_user_to_team_mock.assert_not_awaited()
+        get_user_with_team_mock.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_assign_user_to_team_if_user_not_found():
+
+    session = AsyncMock()
+
+    with (
+        patch(
+            "service.teams.get_user_by_id_service",
+            side_effect=HTTPException(status_code=404, detail="User not found"),
+        ) as get_user_by_id_service_mock,
+        patch(
+            "service.teams.get_team_by_id_service",
+            new=AsyncMock(),
+        ) as get_team_by_id_service_mock,
+        patch(
+            "service.teams.assign_user_to_team",
+            new=AsyncMock(),
+        ) as assign_user_to_team_mock,
+        patch(
+            "service.teams.get_user_by_id_with_team",
+            new=AsyncMock(),
+        ) as get_user_with_team_mock,
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await assign_user_to_team_service(
+                session=session,
+                user_id=404,
+                team_id=10,
+            )
+
+        assert exc_info.value.status_code == 404
+        assert exc_info.value.detail == "User not found"
+
+        get_user_by_id_service_mock.assert_awaited_once_with(
+            session=session,
+            user_id=404,
+        )
+
+        get_team_by_id_service_mock.assert_not_awaited()
         assign_user_to_team_mock.assert_not_awaited()
         get_user_with_team_mock.assert_not_awaited()

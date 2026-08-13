@@ -11,6 +11,7 @@ from service.teams import (
     update_team_service,
     get_team_members_service,
     get_current_user_team_service,
+    remove_user_from_team_service,
 )
 
 """
@@ -598,3 +599,124 @@ async def test_assign_user_to_team_if_team_not_found():
         )
         assign_user_to_team_mock.assert_not_awaited()
         get_user_with_team_mock.assert_not_awaited()
+
+
+"""
+REMOVE USER FROM TEAM SERVICE
+"""
+
+
+@pytest.mark.asyncio
+async def test_remove_user_from_team_service_success():
+
+    session = AsyncMock()
+
+    initial_user = User(
+        id=1,
+        email="test@test.com",
+        username="test",
+        team_id=1,
+    )
+
+    user_without_team = User(
+        id=1,
+        email="test@test.com",
+        username="test",
+        team_id=None,
+    )
+
+    with (
+        patch(
+            "service.teams.get_user_by_id_service",
+            new=AsyncMock(return_value=initial_user),
+        ) as get_user_by_id_service_mock,
+        patch(
+            "service.teams.remove_user_from_team",
+            new=AsyncMock(return_value=user_without_team),
+        ) as remove_user_from_team_mock,
+    ):
+        result = await remove_user_from_team_service(
+            session=session,
+            user_id=1,
+        )
+
+        assert result == user_without_team
+
+        get_user_by_id_service_mock.assert_awaited_once_with(
+            session=session,
+            user_id=1,
+        )
+        remove_user_from_team_mock.assert_awaited_once_with(
+            session=session,
+            user=initial_user,
+        )
+
+
+@pytest.mark.asyncio
+async def test_remove_user_from_team_service_if_user_not_found():
+    session = AsyncMock()
+
+    with (
+        patch(
+            "service.teams.get_user_by_id_service",
+            side_effect=HTTPException(status_code=404, detail="User not found"),
+        ) as get_user_by_id_service_mock,
+        patch(
+            "service.teams.remove_user_from_team",
+            new=AsyncMock(),
+        ) as remove_user_from_team_mock,
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await remove_user_from_team_service(
+                session=session,
+                user_id=1,
+            )
+
+        assert exc_info.value.status_code == 404
+        assert exc_info.value.detail == "User not found"
+
+        get_user_by_id_service_mock.assert_awaited_once_with(
+            session=session,
+            user_id=1,
+        )
+
+        remove_user_from_team_mock.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_remove_user_from_team_if_team_is_none():
+
+    session = AsyncMock()
+
+    initial_user = User(
+        id=1,
+        email="test@test.com",
+        username="test",
+        team_id=None,
+    )
+
+    with (
+        patch(
+            "service.teams.get_user_by_id_service",
+            new=AsyncMock(return_value=initial_user),
+        ) as get_user_by_id_service_mock,
+        patch(
+            "service.teams.remove_user_from_team",
+            new=AsyncMock(),
+        ) as remove_user_from_team_mock,
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await remove_user_from_team_service(
+                session=session,
+                user_id=1,
+            )
+
+        assert exc_info.value.status_code == 409
+        assert exc_info.value.detail == "User is not in a team"
+
+        get_user_by_id_service_mock.assert_awaited_once_with(
+            session=session,
+            user_id=1,
+        )
+
+        remove_user_from_team_mock.assert_not_awaited()

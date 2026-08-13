@@ -120,6 +120,43 @@ async def test_get_team_members_success():
 
 
 @pytest.mark.asyncio
+async def test_get_team_members_success_if_team_is_empty():
+
+    session = AsyncMock()
+
+    team = Team(id=1, name="Team_1", description="Test_team_1")
+
+    team_members = []
+
+    with (
+        patch(
+            "service.teams.get_team_by_id_service",
+            new=AsyncMock(return_value=team),
+        ) as get_team_by_id_service_mock,
+        patch(
+            "service.teams.get_team_members",
+            new=AsyncMock(return_value=team_members),
+        ) as get_team_members_mock,
+    ):
+        result = await get_team_members_service(
+            session=session,
+            team_id=1,
+        )
+
+        assert result == team_members
+
+        get_team_by_id_service_mock.assert_awaited_once_with(
+            session=session,
+            team_id=1,
+        )
+
+        get_team_members_mock.assert_awaited_once_with(
+            session=session,
+            team_id=1,
+        )
+
+
+@pytest.mark.asyncio
 async def test_get_team_members_if_team_not_found():
 
     session = AsyncMock()

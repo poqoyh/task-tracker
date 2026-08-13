@@ -9,6 +9,7 @@ from service.teams import (
     assign_user_to_team_service,
     get_team_by_id_service,
     update_team_service,
+    get_team_members_service,
 )
 
 """
@@ -62,6 +63,91 @@ async def test_get_team_by_id_if_team_not_found():
             session=session,
             team_id=404,
         )
+
+
+"""
+GET TEAM MEMBERS
+"""
+
+
+@pytest.mark.asyncio
+async def test_get_team_members_success():
+
+    session = AsyncMock()
+
+    team = Team(id=1, name="Team_1", description="Test_team_1")
+
+    team_members = [
+        User(
+            id=1,
+            username="alex",
+            team_id=1,
+        ),
+        User(
+            id=2,
+            username="bob",
+            team_id=1,
+        ),
+    ]
+
+    with (
+        patch(
+            "service.teams.get_team_by_id_service",
+            new=AsyncMock(return_value=team),
+        ) as get_team_by_id_service_mock,
+        patch(
+            "service.teams.get_team_members",
+            new=AsyncMock(return_value=team_members),
+        ) as get_team_members_mock,
+    ):
+        result = await get_team_members_service(
+            session=session,
+            team_id=1,
+        )
+
+        assert result == team_members
+
+        get_team_by_id_service_mock.assert_awaited_once_with(
+            session=session,
+            team_id=1,
+        )
+
+        get_team_members_mock.assert_awaited_once_with(
+            session=session,
+            team_id=1,
+        )
+
+
+@pytest.mark.asyncio
+async def test_get_team_members_if_team_not_found():
+
+    session = AsyncMock()
+
+    with (
+        patch(
+            "service.teams.get_team_by_id_service",
+            side_effect=HTTPException(status_code=404, detail="Team not found."),
+        ) as get_team_by_id_service_mock,
+        patch(
+            "service.teams.get_team_members",
+            new=AsyncMock(),
+        ) as get_team_members_mock,
+    ):
+        with pytest.raises(HTTPException) as exp_info:
+            await get_team_members_service(
+                session=session,
+                team_id=404,
+            )
+
+        assert exp_info.value.status_code == 404
+        assert exp_info.value.detail == "Team not found."
+
+        get_team_by_id_service_mock.assert_awaited_once_with(
+            session=session,
+            team_id=404,
+        )
+
+        get_team_members_mock.assert_not_awaited()
 
 
 """

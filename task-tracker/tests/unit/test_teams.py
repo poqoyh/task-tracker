@@ -429,3 +429,56 @@ async def test_assign_user_to_team_if_user_not_found():
         get_team_by_id_service_mock.assert_not_awaited()
         assign_user_to_team_mock.assert_not_awaited()
         get_user_with_team_mock.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_assign_user_to_team_if_team_not_found():
+
+    session = AsyncMock()
+
+    initial_user = User(
+        id=1,
+        email="test@test.com",
+        username="test",
+        team_id=None,
+    )
+
+    with (
+        patch(
+            "service.teams.get_user_by_id_service",
+            new=AsyncMock(return_value=initial_user),
+        ) as get_user_by_id_service_mock,
+        patch(
+            "service.teams.get_team_by_id_service",
+            side_effect=HTTPException(status_code=404, detail="Team not found."),
+        ) as get_team_by_id_service_mock,
+        patch(
+            "service.teams.assign_user_to_team",
+            new=AsyncMock(),
+        ) as assign_user_to_team_mock,
+        patch(
+            "service.teams.get_user_by_id_with_team",
+            new=AsyncMock(),
+        ) as get_user_with_team_mock,
+    ):
+        with pytest.raises(HTTPException) as exp_info:
+            await assign_user_to_team_service(
+                session=session,
+                user_id=1,
+                team_id=1,
+            )
+
+        assert exp_info.value.status_code == 404
+        assert exp_info.value.detail == "Team not found."
+
+        get_user_by_id_service_mock.assert_awaited_once_with(
+            session=session,
+            user_id=1,
+        )
+
+        get_team_by_id_service_mock.assert_awaited_once_with(
+            session=session,
+            team_id=1,
+        )
+        assign_user_to_team_mock.assert_not_awaited()
+        get_user_with_team_mock.assert_not_awaited()

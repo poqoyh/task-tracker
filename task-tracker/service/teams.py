@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,10 +10,11 @@ from crud_repositories.team import (
     assign_user_to_team,
     remove_user_from_team,
     get_team_members,
+    create_team,
 )
 from crud_repositories.user import get_user_by_id_with_team
 
-from schemas.team import TeamUpdate
+from schemas.team import TeamUpdate, TeamCreate
 
 
 async def get_team_by_id_service(
@@ -28,6 +30,25 @@ async def get_team_by_id_service(
         )
 
     return team
+
+
+async def create_team_service(
+    session: AsyncSession,
+    creating_team: TeamCreate,
+):
+    team_data = creating_team.model_dump()
+
+    try:
+        return await create_team(
+            session=session,
+            team_data=team_data,
+        )
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Team with this name already exists.",
+        )
 
 
 async def get_team_members_service(

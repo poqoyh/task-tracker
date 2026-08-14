@@ -16,6 +16,15 @@ services:
       timeout: 3s
       retries: 3
 
+  pg_test:
+    image: postgres
+    environment:
+      POSTGRES_DB: smartrepbase_tests
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+
 
 
 

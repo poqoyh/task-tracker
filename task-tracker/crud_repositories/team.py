@@ -7,12 +7,10 @@ from schemas.team import TeamCreate
 
 async def create_team(
     session: AsyncSession,
-    creating_team: TeamCreate,
+    team_data: dict,
 ) -> Team:
 
-    team_create = creating_team.model_dump()
-
-    team = Team(**team_create)
+    team = Team(**team_data)
 
     session.add(team)
     await session.commit()

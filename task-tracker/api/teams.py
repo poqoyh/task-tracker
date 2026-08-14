@@ -14,7 +14,6 @@ from db.models import User
 from schemas.team import TeamCreate, TeamRead, TeamUpdate
 
 from crud_repositories.team import (
-    create_team,
     get_all_teams,
 )
 from schemas.user import UserShortRead, UserReadWithTeam
@@ -26,6 +25,7 @@ from service.teams import (
     remove_user_from_team_service,
     get_team_members_service,
     get_current_user_team_service,
+    create_team_service,
 )
 
 router = APIRouter(tags=["Teams"])
@@ -39,7 +39,7 @@ async def create(
         Depends(db_helper.session_getter),
     ],
 ):
-    return await create_team(
+    return await create_team_service(
         session=session,
         creating_team=team,
     )

@@ -5,39 +5,6 @@ from db.models import Team, User
 
 pytestmark = pytest.mark.asyncio
 
-"""
-Get team by id
-"""
-
-
-async def test_get_team_by_id_success(client):
-
-    create_response = await client.post(
-        "/api/team/",
-        json={"name": "Backend", "description": "Backend development team"},
-    )
-
-    assert create_response.status_code == 200
-
-    team_id = create_response.json()["id"]
-
-    response = await client.get(f"/api/team/{team_id}/")
-
-    assert response.status_code == 200
-
-    body = response.json()
-    assert body["id"] == team_id
-    assert body["name"] == "Backend"
-    assert body["description"] == "Backend development team"
-
-
-async def test_get_team_by_id_not_found(client):
-
-    response = await client.get("/api/team/999/")
-
-    assert response.status_code == 404
-    assert response.json()["detail"] == "Team not found."
-
 
 """
 Create team
@@ -82,6 +49,40 @@ async def test_create_team_duplicate_name_fails(client):
 
     assert response.status_code == 409
     assert response.json()["detail"] == "Team with this name already exists."
+
+
+"""
+Get team by id
+"""
+
+
+async def test_get_team_by_id_success(client):
+
+    create_response = await client.post(
+        "/api/team/",
+        json={"name": "Backend", "description": "Backend development team"},
+    )
+
+    assert create_response.status_code == 200
+
+    team_id = create_response.json()["id"]
+
+    response = await client.get(f"/api/team/{team_id}/")
+
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["id"] == team_id
+    assert body["name"] == "Backend"
+    assert body["description"] == "Backend development team"
+
+
+async def test_get_team_by_id_not_found(client):
+
+    response = await client.get("/api/team/999/")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Team not found."
 
 
 """

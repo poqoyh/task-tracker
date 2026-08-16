@@ -4,7 +4,8 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-
+from auth.dependencies import get_current_user
+from db.models import User
 from main import main_app
 from db import db_helper
 from db.base import Base
@@ -51,3 +52,41 @@ async def session(engine):
     async_session = async_sessionmaker(engine, expire_on_commit=False)
     async with async_session() as s:
         yield s
+
+
+@pytest_asyncio.fixture
+async def create_team(client):
+    async def _create_team(
+        name: str = "Backend",
+        description: str = "Backend team",
+    ):
+        response = await client.post(
+            "api/team/", json={"name": name, "description": description}
+        )
+
+        assert response.status_code == 200, response.json()
+        return response.json()
+
+    return _create_team
+
+
+@pytest_asyncio.fixture
+async def authenticated_user(session):
+    user = User(
+        email="test@test.com",
+        username="testuser",
+        hashed_password="fakehash",
+    )
+
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    async def override_get_current_user():
+        return user
+
+    main_app.dependency_overrides[get_current_user] = override_get_current_user
+
+    yield user
+
+    main_app.dependency_overrides.pop(get_current_user, None)

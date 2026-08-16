@@ -35,12 +35,9 @@ async def test_create_team_missing_description_returns_422(client):
     assert response.status_code == 422
 
 
-async def test_create_team_duplicate_name_fails(client):
+async def test_create_team_duplicate_name_fails(client, create_team):
 
-    await client.post(
-        "api/team/",
-        json={"name": "Backend", "description": "First team"},
-    )
+    await create_team()
 
     response = await client.post(
         "api/team/",
@@ -56,25 +53,17 @@ Get team by id
 """
 
 
-async def test_get_team_by_id_success(client):
+async def test_get_team_by_id_success(client, create_team):
 
-    create_response = await client.post(
-        "/api/team/",
-        json={"name": "Backend", "description": "Backend development team"},
-    )
+    team = await create_team(name="Backend", description="Backend developer team")
 
-    assert create_response.status_code == 200
-
-    team_id = create_response.json()["id"]
-
-    response = await client.get(f"/api/team/{team_id}/")
+    response = await client.get(f"/api/team/{team["id"]}/")
 
     assert response.status_code == 200
-
     body = response.json()
-    assert body["id"] == team_id
+    assert body["id"] == team["id"]
     assert body["name"] == "Backend"
-    assert body["description"] == "Backend development team"
+    assert body["description"] == "Backend developer team"
 
 
 async def test_get_team_by_id_not_found(client):
@@ -90,34 +79,15 @@ Get my team
 """
 
 
-async def test_get_my_team_success(client, session):
+async def test_get_my_team_success(client, session, create_team, authenticated_user):
 
-    team = Team(name="Backend", description="Backend team")
-    session.add(team)
+    team = await create_team()
+    authenticated_user.team_id = team["id"]
+
+    session.add(authenticated_user)
     await session.commit()
-    await session.refresh(team)
-
-    user = User(
-        email="test@test.com",
-        username="testuser",
-        hashed_password="fakehash",
-        team_id=team.id,
-    )
-
-    session.add(user)
-    await session.commit()
-    await session.refresh(user)
-
-    async def override_get_current_user():
-        return user
-
-    from main import main_app
-
-    main_app.dependency_overrides[get_current_user] = override_get_current_user
 
     response = await client.get("/api/team/me/team/")
 
     assert response.status_code == 200
     assert response.json()["name"] == "Backend"
-
-    main_app.dependency_overrides.pop(get_current_user, None)

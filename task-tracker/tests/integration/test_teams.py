@@ -91,3 +91,11 @@ async def test_get_my_team_success(client, session, create_team, authenticated_u
 
     assert response.status_code == 200
     assert response.json()["name"] == "Backend"
+
+
+async def test_get_my_team_if_team_is_none(client, authenticated_user):
+
+    response = await client.get("/api/team/me/team/")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "User is not in a team"

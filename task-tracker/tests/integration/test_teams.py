@@ -49,32 +49,6 @@ async def test_create_team_duplicate_name_fails(client, create_team):
 
 
 """
-Get team by id
-"""
-
-
-async def test_get_team_by_id_success(client, create_team):
-
-    team = await create_team(name="Backend", description="Backend developer team")
-
-    response = await client.get(f"/api/team/{team["id"]}/")
-
-    assert response.status_code == 200
-    body = response.json()
-    assert body["id"] == team["id"]
-    assert body["name"] == "Backend"
-    assert body["description"] == "Backend developer team"
-
-
-async def test_get_team_by_id_not_found(client):
-
-    response = await client.get("/api/team/999/")
-
-    assert response.status_code == 404
-    assert response.json()["detail"] == "Team not found."
-
-
-"""
 Get my team
 """
 
@@ -99,3 +73,29 @@ async def test_get_my_team_if_team_is_none(client, authenticated_user):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "User is not in a team"
+
+
+"""
+Get team by id
+"""
+
+
+async def test_get_team_by_id_success(client, create_team):
+
+    team = await create_team(name="Backend", description="Backend developer team")
+
+    response = await client.get(f"/api/team/{team["id"]}/")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == team["id"]
+    assert body["name"] == "Backend"
+    assert body["description"] == "Backend developer team"
+
+
+async def test_get_team_by_id_not_found(client):
+
+    response = await client.get("/api/team/999/")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Team not found."

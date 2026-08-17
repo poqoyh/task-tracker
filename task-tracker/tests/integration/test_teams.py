@@ -49,6 +49,37 @@ async def test_create_team_duplicate_name_fails(client, create_team):
 
 
 """
+Get teams
+"""
+
+
+async def test_get_teams_success(client, create_team):
+
+    await create_team()
+    await create_team(
+        name="Frontend",
+        description="Frontend team",
+    )
+
+    response = await client.get("/api/team/")
+
+    assert response.status_code == 200
+
+    body = response.json()
+    assert len(body) == 2
+
+    assert {team["name"] for team in body} == {"Backend", "Frontend"}
+
+
+async def test_get_teams_empty_list(client):
+
+    response = await client.get("/api/team/")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+"""
 Get my team
 """
 

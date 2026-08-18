@@ -33,7 +33,7 @@ class UserReadWithSkills(BaseModel):
 
 class UserReadWithTeam(BaseModel):
     username: str
-    team: TeamRead
+    team: TeamRead | None
 
 
 class UserProfileRead(UserBase):

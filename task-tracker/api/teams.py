@@ -128,7 +128,7 @@ async def assign_user_to_team(
     )
 
 
-@router.patch("/team/{team_id}/remove-user/{user_id}", response_model=UserShortRead)
+@router.patch("/{team_id}/remove-user/{user_id}", response_model=UserShortRead)
 async def remove_user_from_team(
     session: Annotated[
         AsyncSession,

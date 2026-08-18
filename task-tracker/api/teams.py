@@ -112,6 +112,20 @@ async def update_team(
     )
 
 
+@router.patch("/remove-user/{user_id}", response_model=UserShortRead)
+async def remove_user_from_team(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    user_id: int,
+):
+    return await remove_user_from_team_service(
+        session=session,
+        user_id=user_id,
+    )
+
+
 @router.patch("/{user_id}/{team_id}", response_model=UserReadWithTeam)
 async def assign_user_to_team(
     session: Annotated[
@@ -125,18 +139,4 @@ async def assign_user_to_team(
         session=session,
         user_id=user_id,
         team_id=team_id,
-    )
-
-
-@router.patch("/{team_id}/remove-user/{user_id}", response_model=UserShortRead)
-async def remove_user_from_team(
-    session: Annotated[
-        AsyncSession,
-        Depends(db_helper.session_getter),
-    ],
-    user_id: int,
-):
-    return await remove_user_from_team_service(
-        session=session,
-        user_id=user_id,
     )

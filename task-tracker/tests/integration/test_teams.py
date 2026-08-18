@@ -244,3 +244,51 @@ async def test_update_team_success_with_empty(client, create_team):
 
     assert body["name"] == "Backend"
     assert body["description"] == "Backend team"
+
+
+"""
+Assign user to team
+"""
+
+
+async def test_assign_user_to_team(client, session, create_team):
+    team = await create_team()
+
+    user_1 = User(
+        username="user1",
+        email="user1@mail.com",
+        hashed_password="fake123",
+        team_id=None,
+    )
+
+    session.add(user_1)
+    await session.commit()
+    await session.refresh(user_1)
+
+    response = await client.patch(f"/api/team/{user_1.id}/{team["id"]}")
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["team"]["id"] == team["id"]
+
+
+async def test_assign_user_to_team_if_team_id_is_not_none(client, session, create_team):
+    team = await create_team()
+
+    user_1 = User(
+        username="user1",
+        email="user1@mail.com",
+        hashed_password="fake123",
+        team_id=1,
+    )
+
+    session.add(user_1)
+    await session.commit()
+    await session.refresh(user_1)
+
+    response = await client.patch(f"/api/team/{user_1.id}/{team["id"]}")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "User already in a team"

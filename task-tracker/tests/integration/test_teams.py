@@ -130,3 +130,51 @@ async def test_get_team_by_id_not_found(client):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Team not found."
+
+
+"""
+Get team members
+"""
+
+
+async def test_get_team_members_success(client, session, create_team):
+    team = await create_team()
+
+    user_1 = User(
+        username="user1",
+        email="user1@mail.com",
+        hashed_password="fake123",
+        team_id=team["id"],
+    )
+
+    user_2 = User(
+        username="user2",
+        email="user2@mail.com",
+        hashed_password="fake123",
+        team_id=team["id"],
+    )
+
+    session.add_all([user_1, user_2])
+    await session.commit()
+
+    response = await client.get(f"/api/team/{team['id']}/members")
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert len(body) == 2
+    assert {user["username"] for user in body} == {"user1", "user2"}
+
+
+async def test_get_team_members_team_empty(client, create_team):
+
+    team = await create_team()
+
+    response = await client.get(f"/api/team/{team['id']}/members")
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert len(body) == 0

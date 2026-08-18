@@ -231,3 +231,16 @@ async def test_update_team_success_with_description(client, create_team):
 
     assert body["name"] == "Backend"
     assert body["description"] == "new_description"
+
+
+async def test_update_team_success_with_empty(client, create_team):
+    team = await create_team()
+
+    response = await client.patch(f"/api/team/{team['id']}/", json={})
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["name"] == "Backend"
+    assert body["description"] == "Backend team"

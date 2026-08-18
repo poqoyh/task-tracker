@@ -292,3 +292,50 @@ async def test_assign_user_to_team_if_team_id_is_not_none(client, session, creat
 
     assert response.status_code == 409
     assert response.json()["detail"] == "User already in a team"
+
+
+"""
+Remove user from team
+"""
+
+
+async def test_remove_user_from_team_success(client, session, create_team):
+    team = await create_team()
+
+    user_1 = User(
+        username="user1",
+        email="user1@mail.com",
+        hashed_password="fake123",
+        team_id=team["id"],
+    )
+
+    session.add(user_1)
+    await session.commit()
+    await session.refresh(user_1)
+
+    response = await client.patch(f"/api/team/remove-user/{user_1.id}")
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["team"] is None
+
+
+async def test_remove_user_from_team_if_team_none(client, session):
+
+    user_1 = User(
+        username="user1",
+        email="user1@mail.com",
+        hashed_password="fake123",
+        team_id=None,
+    )
+
+    session.add(user_1)
+    await session.commit()
+    await session.refresh(user_1)
+
+    response = await client.patch(f"/api/team/remove-user/{user_1.id}")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "User is not in a team"

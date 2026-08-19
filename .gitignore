@@ -150,7 +150,7 @@ activemq-data/
 *.sage.py
 
 # Environments
-task-tracker/.env
+.env
 .envrc
 .venv
 env/
@@ -220,4 +220,4 @@ __marimo__/
 .streamlit/secrets.toml
 
 
-task-tracker/certs/
+certs/

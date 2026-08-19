@@ -20,5 +20,5 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["task-tracker"]
 asyncio_mode = "auto"
+pythonpath = ["."]

@@ -28,6 +28,7 @@ from crud_repositories.user import get_all_users, get_user_profile
 from db import db_helper
 from db.models import User
 from db.models.user import UserRole
+from schemas.pagination import PaginationParams
 
 from schemas.user import (
     UserCreate,
@@ -115,9 +116,12 @@ async def get_users(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    pagination: Annotated[PaginationParams, Depends()],
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
-    return await get_all_users(session)
+    return await get_all_users(
+        session, limit=pagination.limit, offset=pagination.offset
+    )
 
 
 @router.get("/me", response_model=UserShortRead)

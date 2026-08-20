@@ -7,7 +7,7 @@ from db.models.task import TaskStatus, TaskPriority
 
 class TaskBase(BaseModel):
     name: str
-    description: str
+    description: str | None = None
     status: TaskStatus = TaskStatus.CREATED
     priority: TaskPriority = TaskPriority.MEDIUM
 

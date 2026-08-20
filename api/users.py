@@ -8,7 +8,7 @@ from fastapi import (
     Response,
 )
 
-from auth.dependencies import get_current_user, get_user_for_refresh_token
+from auth.dependencies import get_current_user, get_user_for_refresh_token, require_role
 
 from auth.jwt import (
     create_access_token,
@@ -25,6 +25,7 @@ from crud_repositories.user import get_all_users, get_user_profile
 
 from db import db_helper
 from db.models import User
+from db.models.user import UserRole
 
 from schemas.user import (
     UserCreate,
@@ -112,6 +113,7 @@ async def get_users(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_all_users(session)
 
@@ -119,6 +121,9 @@ async def get_users(
 @router.get("/me", response_model=UserShortRead)
 async def me(
     current_user: User = Depends(get_current_user),
+    _: User = Depends(
+        require_role(UserRole.ADMIN, UserRole.TEAM_LEAD, UserRole.WORKER)
+    ),
 ):
     return current_user
 
@@ -130,6 +135,9 @@ async def profile(
         Depends(db_helper.session_getter),
     ],
     current_user: User = Depends(get_current_user),
+    _: User = Depends(
+        require_role(UserRole.ADMIN, UserRole.TEAM_LEAD, UserRole.WORKER)
+    ),
 ):
     return await get_user_profile(
         session=session,
@@ -144,6 +152,7 @@ async def get_user_by_id(
         Depends(db_helper.session_getter),
     ],
     user_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_user_by_id_service(session=session, user_id=user_id)
 
@@ -156,6 +165,9 @@ async def update_user(
     ],
     user_id: int,
     user_update_data: UserUpdate,
+    _: User = Depends(
+        require_role(UserRole.ADMIN, UserRole.TEAM_LEAD, UserRole.WORKER)
+    ),
 ):
     return await update_user_service(
         session=session,

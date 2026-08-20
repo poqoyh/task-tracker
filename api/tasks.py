@@ -7,9 +7,12 @@ from fastapi import (
     Depends,
 )
 
+from auth.dependencies import require_role
 from crud_repositories.task import create_task, get_tasks
 
 from db import db_helper
+from db.models import User
+from db.models.user import UserRole
 
 from schemas.tasks import TaskRead, TaskCreate, TaskUpdate
 from service.tasks import (
@@ -30,6 +33,7 @@ async def create(
         Depends(db_helper.session_getter),
     ],
     task: TaskCreate,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await create_task(session=session, creating_task=task)
 
@@ -40,6 +44,7 @@ async def get_all_tasks(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_tasks(session=session)
 
@@ -51,6 +56,7 @@ async def get_user_tasks(
         Depends(db_helper.session_getter),
     ],
     user_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_users_tasks_service(session=session, user_id=user_id)
 
@@ -62,6 +68,7 @@ async def get_task(
         Depends(db_helper.session_getter),
     ],
     task_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_task_by_id_service(session=session, task_id=task_id)
 
@@ -74,6 +81,7 @@ async def update_task(
     ],
     task_id: int,
     task_update: TaskUpdate,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await update_task_service(
         session=session,
@@ -90,6 +98,7 @@ async def assign_task_to_user(
     ],
     task_id: int,
     user_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
 
     return await assign_task_to_user_service(
@@ -106,6 +115,7 @@ async def unassign_task(
         Depends(db_helper.session_getter),
     ],
     task_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await unassign_task_from_user_service(
         session=session,

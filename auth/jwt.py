@@ -3,10 +3,21 @@ from datetime import timedelta, datetime, timezone
 import jwt
 from core.config import settings
 
+from functools import lru_cache
+
+
+@lru_cache
+def get_private_key() -> str:
+    return settings.auth.private_key_path.read_text()
+
+
+@lru_cache
+def get_public_key() -> str:
+    return settings.auth.public_key_path.read_text()
+
 
 def encode_jwt(
     payload: dict,
-    private_key: str = settings.auth.private_key_path.read_text(),
     algorithm: str = settings.auth.algorithm,
     expire_minutes: int = settings.auth.access_token_expire_minutes,
     expire_timedelta: timedelta | None = None,
@@ -27,7 +38,7 @@ def encode_jwt(
 
     encoded = jwt.encode(
         to_encode,
-        key=private_key,
+        key=get_private_key(),
         algorithm=algorithm,
     )
 
@@ -36,12 +47,11 @@ def encode_jwt(
 
 def decode_jwt(
     token: str | bytes,
-    public_key=settings.auth.public_key_path.read_text(),
     algorithm: str = settings.auth.algorithm,
 ):
     decoded = jwt.decode(
         jwt=token,
-        key=public_key,
+        key=get_public_key(),
         algorithms=[algorithm],
     )
 

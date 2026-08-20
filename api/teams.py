@@ -7,9 +7,10 @@ from fastapi import (
     Depends,
 )
 
-from auth.dependencies import get_current_user
+from auth.dependencies import get_current_user, require_role
 from db import db_helper
 from db.models import User
+from db.models.user import UserRole
 
 from schemas.team import TeamCreate, TeamRead, TeamUpdate
 
@@ -38,6 +39,7 @@ async def create(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await create_team_service(
         session=session,
@@ -51,6 +53,7 @@ async def get_teams(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_all_teams(session=session)
 
@@ -65,6 +68,9 @@ async def get_my_team(
         User,
         Depends(get_current_user),
     ],
+    _: User = Depends(
+        require_role(UserRole.ADMIN, UserRole.TEAM_LEAD, UserRole.WORKER)
+    ),
 ):
     return await get_current_user_team_service(
         session=session, user_id=int(current_user.id)
@@ -78,6 +84,7 @@ async def get_team(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_team_by_id_service(
         session=session,
@@ -92,6 +99,7 @@ async def get_team_members(
         Depends(db_helper.session_getter),
     ],
     team_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_team_members_service(session=session, team_id=team_id)
 
@@ -104,6 +112,7 @@ async def update_team(
     ],
     team_id: int,
     update_data: TeamUpdate,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await update_team_service(
         session=session,
@@ -119,6 +128,7 @@ async def remove_user_from_team(
         Depends(db_helper.session_getter),
     ],
     user_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await remove_user_from_team_service(
         session=session,
@@ -134,6 +144,7 @@ async def assign_user_to_team(
     ],
     user_id: int,
     team_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await assign_user_to_team_service(
         session=session,

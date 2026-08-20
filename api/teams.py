@@ -11,6 +11,7 @@ from auth.dependencies import get_current_user, require_role
 from db import db_helper
 from db.models import User
 from db.models.user import UserRole
+from schemas.pagination import PaginationParams
 
 from schemas.team import TeamCreate, TeamRead, TeamUpdate
 
@@ -53,9 +54,12 @@ async def get_teams(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    pagination: Annotated[PaginationParams, Depends()],
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
-    return await get_all_teams(session=session)
+    return await get_all_teams(
+        session=session, limit=pagination.limit, offset=pagination.offset
+    )
 
 
 @router.get("/me/team/", response_model=TeamRead)

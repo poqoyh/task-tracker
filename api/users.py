@@ -22,6 +22,7 @@ from auth.service import (
     update_user_service,
     change_user_role_service,
 )
+from core.config import settings
 from crud_repositories.user import get_all_users, get_user_profile
 
 from db import db_helper
@@ -68,7 +69,7 @@ async def login(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False,  # Set to True if using HTTPS
+        secure=settings.auth.cookie_secure,
         samesite="lax",
     )
 
@@ -76,7 +77,7 @@ async def login(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,  # Set to True if using HTTPS
+        secure=settings.auth.cookie_secure,
         samesite="lax",
     )
 
@@ -101,7 +102,7 @@ async def refresh(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False,
+        secure=settings.auth.cookie_secure,
         samesite="lax",
     )
 

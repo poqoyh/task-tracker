@@ -20,6 +20,7 @@ from auth.service import (
     authenticate_user_service,
     get_user_by_id_service,
     update_user_service,
+    change_user_role_service,
 )
 from crud_repositories.user import get_all_users, get_user_profile
 
@@ -173,4 +174,21 @@ async def update_user(
         session=session,
         user_id=user_id,
         user_update_data=user_update_data,
+    )
+
+
+@router.patch("/{user_id}/role", response_model=UserShortRead)
+async def change_user_role(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    user_id: int,
+    new_role: UserRole,
+    _: User = Depends(require_role(UserRole.ADMIN)),
+):
+    return await change_user_role_service(
+        session=session,
+        user_id=user_id,
+        new_role=new_role,
     )

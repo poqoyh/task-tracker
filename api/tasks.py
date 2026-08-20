@@ -14,6 +14,8 @@ from db import db_helper
 from db.models import User
 from db.models.user import UserRole
 
+from schemas.pagination import PaginationParams
+
 from schemas.tasks import TaskRead, TaskCreate, TaskUpdate
 from service.tasks import (
     get_task_by_id_service,
@@ -44,9 +46,12 @@ async def get_all_tasks(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    pagination: Annotated[PaginationParams, Depends()],
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
-    return await get_tasks(session=session)
+    return await get_tasks(
+        session=session, limit=pagination.limit, offset=pagination.offset
+    )
 
 
 @router.get("/users/{user_id}/tasks", response_model=list[TaskRead])

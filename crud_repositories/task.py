@@ -22,9 +22,11 @@ async def create_task(
 
 async def get_tasks(
     session: AsyncSession,
+    limit: int,
+    offset: int,
 ) -> list[Task]:
 
-    stmt = select(Task).order_by(Task.created_at)
+    stmt = select(Task).order_by(Task.created_at).limit(limit).offset(offset)
 
     result = await session.scalars(stmt)
 

@@ -10,6 +10,7 @@ from fastapi import (
 from auth.dependencies import require_role
 from db import db_helper
 from db.models.user import UserRole, User
+from schemas.pagination import PaginationParams
 
 from schemas.skill import (
     SkillCreate,
@@ -50,9 +51,12 @@ async def get_skills_all(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    pagination: Annotated[PaginationParams, Depends()],
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
-    return await get_all_skills(session)
+    return await get_all_skills(
+        session, limit=pagination.limit, offset=pagination.offset
+    )
 
 
 @router.get("/{skill_id}/", response_model=SkillShortRead)

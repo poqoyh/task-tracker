@@ -47,9 +47,11 @@ async def get_skill_by_name(
 
 async def get_all_skills(
     session: AsyncSession,
-):
+    limit: int,
+    offset: int,
+) -> list[Skill]:
 
-    stmt = select(Skill).order_by(Skill.id)
+    stmt = select(Skill).order_by(Skill.id).limit(limit).offset(offset)
 
     result = await session.scalars(stmt)
 

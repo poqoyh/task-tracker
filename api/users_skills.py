@@ -4,9 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi import APIRouter, Depends
 
-from auth.dependencies import get_current_user
+from auth.dependencies import get_current_user, require_role
 from db import db_helper
 from db.models import User
+from db.models.user import UserRole
 from schemas.user import UserReadWithSkills
 from schemas.user_skill import UserSkillCreate, UserSkillRead
 
@@ -31,6 +32,9 @@ async def get_my_skills(
         User,
         Depends(get_current_user),
     ],
+    _: User = Depends(
+        require_role(UserRole.ADMIN, UserRole.TEAM_LEAD, UserRole.WORKER)
+    ),
 ):
     return await get_users_skills(session=session, user_id=int(current_user.id))
 
@@ -42,6 +46,7 @@ async def get_user_skills(
         Depends(db_helper.session_getter),
     ],
     user_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_users_skills(session=session, user_id=user_id)
 
@@ -54,6 +59,7 @@ async def add_skill_to_user(
     ],
     user_id: int,
     data: UserSkillCreate,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await assign_skill_to_user_service(
         session=session, user_id=user_id, data=data
@@ -66,6 +72,7 @@ async def update_user_skill(
     user_id: int,
     new_experience: int,
     skill_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await update_experience_months_service(
         session=session,

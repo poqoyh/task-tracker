@@ -45,7 +45,7 @@ async def skill_create(
 
 
 @router.get("/", response_model=list[SkillShortRead])
-async def get_skills(
+async def get_skills_all(
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
@@ -56,7 +56,7 @@ async def get_skills(
 
 
 @router.get("/{skill_id}/", response_model=SkillShortRead)
-async def get_skill(
+async def get_skill_by_id(
     skill_id: int,
     session: Annotated[
         AsyncSession,
@@ -68,7 +68,7 @@ async def get_skill(
 
 
 @router.get("/by-name/{skill_name}", response_model=SkillShortRead)
-async def get_skill(
+async def get_skill_by_name(
     skill_name: str,
     session: Annotated[
         AsyncSession,

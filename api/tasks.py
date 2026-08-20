@@ -108,7 +108,7 @@ async def assign_task_to_user(
     )
 
 
-@router.patch("/task/{task_id}/unassign")
+@router.patch("/{task_id}/unassign")
 async def unassign_task(
     session: Annotated[
         AsyncSession,

@@ -1,5 +1,6 @@
 from sqlalchemy import String, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Enum as SQLEnum
 
 from datetime import datetime
 
@@ -8,6 +9,15 @@ from db.base import Base
 from db.mixins.integer_id_pk import IntIDPKMixin
 
 from typing import TYPE_CHECKING
+
+from enum import Enum
+
+
+class UserRole(str, Enum):
+    WORKER = "worker"
+    TEAM_LEAD = "team_lead"
+    ADMIN = "admin"
+
 
 if TYPE_CHECKING:
     from db.models.team import Team
@@ -34,6 +44,16 @@ class User(IntIDPKMixin, Base):
 
     created_at: Mapped[datetime] = mapped_column(
         server_default=func.now(),
+        nullable=False,
+    )
+
+    role: Mapped[UserRole] = mapped_column(
+        SQLEnum(
+            UserRole,
+            values_callable=lambda enum: [item.value for item in enum],
+            name="userrole",
+        ),
+        default=UserRole.WORKER,
         nullable=False,
     )
 

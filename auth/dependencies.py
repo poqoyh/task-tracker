@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import db_helper
 from db.models import User
+from db.models.user import UserRole
 
 from .jwt import decode_jwt
 
@@ -86,3 +87,15 @@ async def get_user_for_refresh_token(
         cookie_name="refresh_token",
         expected_type="refresh",
     )
+
+
+def require_role(*roles: UserRole):
+    async def checker(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in roles:
+            raise HTTPException(
+                status_code=403,
+                detail="Not enough permissions",
+            )
+        return current_user
+
+    return checker

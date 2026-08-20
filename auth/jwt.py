@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 
 import jwt
 from core.config import settings
@@ -13,7 +13,7 @@ def encode_jwt(
 ):
     to_encode = payload.copy()
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     if expire_timedelta:
         expire = now + expire_timedelta

@@ -7,7 +7,9 @@ from fastapi import (
     Depends,
 )
 
+from auth.dependencies import require_role
 from db import db_helper
+from db.models.user import UserRole, User
 
 from schemas.skill import (
     SkillCreate,
@@ -37,6 +39,7 @@ async def skill_create(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await create_skill(session=session, creating_skill=creating_skill)
 
@@ -47,6 +50,7 @@ async def get_skills(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_all_skills(session)
 
@@ -58,6 +62,7 @@ async def get_skill(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_skill_by_id_service(session=session, skill_id=skill_id)
 
@@ -69,6 +74,7 @@ async def get_skill(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_skill_by_name_service(session=session, skill_name=skill_name)
 
@@ -81,6 +87,7 @@ async def update_skill(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await update_skill_service(
         skill_id=skill_id,
@@ -96,6 +103,7 @@ async def delete_by_id(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     await delete_skill_service(
         skill_id=skill_id,

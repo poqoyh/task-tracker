@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from db.models import User, UserSkill
+from db.models.user import UserRole
 from schemas.user import UserCreate
 
 
@@ -74,17 +75,18 @@ async def get_user_by_id_with_skills(
 
 
 async def get_user_profile(
-        session: AsyncSession,
-        user_id: int,
+    session: AsyncSession,
+    user_id: int,
 ) -> User | None:
-    stmt = (select(User)
-            .where(User.id == user_id)
-            .options(
+    stmt = (
+        select(User)
+        .where(User.id == user_id)
+        .options(
             selectinload(User.user_skills).selectinload(UserSkill.skill),
-        selectinload(User.team),
-        selectinload(User.tasks)
-                    )
-            )
+            selectinload(User.team),
+            selectinload(User.tasks),
+        )
+    )
 
     result = await session.scalars(stmt)
 
@@ -111,6 +113,20 @@ async def update_user(
 ) -> User:
     for field, value in update_data.items():
         setattr(user, field, value)
+
+    await session.commit()
+    await session.refresh(user)
+
+    return user
+
+
+async def update_user_role(
+    session: AsyncSession,
+    user: User,
+    new_role: UserRole,
+) -> User:
+
+    user.role = new_role
 
     await session.commit()
     await session.refresh(user)

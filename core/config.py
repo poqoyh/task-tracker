@@ -43,6 +43,8 @@ class Auth(BaseModel):
     algorithm: str = "RS256"
     access_token_expire_minutes: int = 15
 
+    cookie_secure: bool = False
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(

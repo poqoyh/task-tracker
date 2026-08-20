@@ -1,5 +1,5 @@
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession, result
 
 from db.models import Task
 from schemas.tasks import TaskCreate
@@ -31,6 +31,12 @@ async def get_tasks(
     result = await session.scalars(stmt)
 
     return result.all()
+
+
+async def count_tasks(session: AsyncSession) -> int:
+    result = await session.scalar(select(func.count()).select_from(Task))
+
+    return result or 0
 
 
 async def get_users_tasks(

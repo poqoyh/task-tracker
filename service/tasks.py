@@ -8,9 +8,28 @@ from crud_repositories.task import (
     assign_task_to_user,
     unassign_task,
     get_users_tasks,
+    get_tasks,
+    count_tasks,
 )
 from db.models import Task
-from schemas.tasks import TaskUpdate
+from schemas.pagination import PaginatedResponse
+from schemas.tasks import TaskUpdate, TaskRead
+
+
+async def get_task_service(
+    session: AsyncSession,
+    limit: int,
+    offset: int,
+) -> PaginatedResponse[TaskRead]:
+    items = await get_tasks(session=session, limit=limit, offset=offset)
+    total = await count_tasks(session=session)
+
+    return PaginatedResponse[TaskRead](
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 async def get_task_by_id_service(

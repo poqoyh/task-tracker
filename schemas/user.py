@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr
 
+from db.models.user import UserRole
 from schemas.tasks import TaskRead
 from schemas.team import TeamRead
 from schemas.user_skill import UserSkillRead
@@ -23,16 +24,19 @@ class UserLogin(BaseModel):
 
 class UserShortRead(UserBase):
     id: int
+    role: UserRole
     created_at: datetime
 
 
 class UserReadWithSkills(BaseModel):
     username: str
+    role: UserRole
     user_skills: list[UserSkillRead]
 
 
 class UserReadWithTeam(BaseModel):
     username: str
+    role: UserRole
     team: TeamRead | None
 
 

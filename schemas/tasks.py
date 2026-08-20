@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from db.models.task import TaskStatus, TaskPriority
 
@@ -24,6 +24,8 @@ class TaskUpdate(BaseModel):
 
 
 class TaskRead(TaskBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int | None
     created_at: datetime

@@ -7,10 +7,12 @@ from crud_repositories.user import (
     get_user_by_identifier,
     get_user_by_id,
     update_user,
+    update_user_role,
 )
 
 from auth.hashing import hash_password, validate_password
 from db.models import User
+from db.models.user import UserRole
 
 from schemas.user import (
     UserCreate,
@@ -86,4 +88,18 @@ async def update_user_service(
         session=session,
         user=user,
         update_data=update_data,
+    )
+
+
+async def change_user_role_service(
+    session: AsyncSession,
+    user_id: int,
+    new_role: UserRole,
+):
+    user = await get_user_by_id_service(session=session, user_id=user_id)
+
+    return await update_user_role(
+        session=session,
+        user=user,
+        new_role=new_role,
     )

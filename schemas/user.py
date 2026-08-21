@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 from db.models.user import UserRole
 from schemas.tasks import TaskRead
@@ -23,6 +23,8 @@ class UserLogin(BaseModel):
 
 
 class UserShortRead(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     role: UserRole
     created_at: datetime

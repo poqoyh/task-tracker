@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -37,6 +37,12 @@ async def get_all_users(
     result = await session.scalars(stmt)
 
     return result.all()
+
+
+async def count_users(session: AsyncSession) -> int:
+    result = await session.scalar(select(func.count()).select_from(User))
+
+    return result or 0
 
 
 async def get_user_by_id(

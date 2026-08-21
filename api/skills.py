@@ -35,11 +35,11 @@ router = APIRouter(tags=["Skills"])
 
 @router.post("/", response_model=SkillShortRead)
 async def skill_create(
-    creating_skill: SkillCreate,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    creating_skill: SkillCreate,
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await create_skill(session=session, creating_skill=creating_skill)
@@ -61,11 +61,11 @@ async def get_all_skills(
 
 @router.get("/{skill_id}/", response_model=SkillShortRead)
 async def get_skill_by_id(
-    skill_id: int,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    skill_id: int,
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_skill_by_id_service(session=session, skill_id=skill_id)
@@ -73,11 +73,11 @@ async def get_skill_by_id(
 
 @router.get("/by-name/{skill_name}", response_model=SkillShortRead)
 async def get_skill_by_name(
-    skill_name: str,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    skill_name: str,
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_skill_by_name_service(session=session, skill_name=skill_name)
@@ -85,12 +85,12 @@ async def get_skill_by_name(
 
 @router.patch("/{skill_id}", response_model=SkillShortRead)
 async def update_skill(
-    skill_id: int,
-    update_data: SkillUpdate,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    skill_id: int,
+    update_data: SkillUpdate,
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await update_skill_service(
@@ -102,11 +102,11 @@ async def update_skill(
 
 @router.delete("/{skill_id}")
 async def delete_by_id(
-    skill_id: int,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    skill_id: int,
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     await delete_skill_service(

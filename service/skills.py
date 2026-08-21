@@ -33,8 +33,8 @@ async def get_skills_service(
 
 
 async def get_skill_by_id_service(
-    skill_id: int,
     session: AsyncSession,
+    skill_id: int,
 ):
     skill = await get_skill_by_id(
         session=session,
@@ -51,8 +51,8 @@ async def get_skill_by_id_service(
 
 
 async def get_skill_by_name_service(
-    skill_name: str,
     session: AsyncSession,
+    skill_name: str,
 ):
     skill = await get_skill_by_name(
         session=session,
@@ -69,9 +69,9 @@ async def get_skill_by_name_service(
 
 
 async def update_skill_service(
+    session: AsyncSession,
     skill_id: int,
     update_data: SkillUpdate,
-    session: AsyncSession,
 ):
     skill = await get_skill_by_id_service(skill_id=skill_id, session=session)
 

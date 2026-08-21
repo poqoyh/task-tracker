@@ -65,7 +65,6 @@ def create_access_token(user):
             "user": user.username,
             "type": "access",
         },
-        expire_timedelta=timedelta(minutes=15),
     )
 
 
@@ -75,5 +74,5 @@ def create_refresh_token(user):
             "sub": str(user.id),
             "type": "refresh",
         },
-        expire_timedelta=timedelta(days=30),
+        expire_timedelta=timedelta(days=settings.auth.refresh_token_expire_days),
     )

@@ -48,6 +48,14 @@ async def get_team_members(
     return result.all()
 
 
+async def count_team_members(session: AsyncSession, team_id: int) -> int:
+    result = await session.scalar(
+        select(func.count()).select_from(User).where(User.team_id == team_id)
+    )
+
+    return result or 0
+
+
 async def get_teams(
     session: AsyncSession,
     limit: int,

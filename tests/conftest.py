@@ -2,10 +2,11 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import NullPool
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from auth.dependencies import get_current_user
 from db.models import User
+from db.models.user import UserRole
 from main import main_app
 from db import db_helper
 from db.base import Base
@@ -44,7 +45,7 @@ async def client(engine):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
-    main_app.dependency_overrides.clear()
+    main_app.dependency_overrides.pop(db_helper.session_getter, None)
 
 
 @pytest_asyncio.fixture
@@ -54,39 +55,110 @@ async def session(engine):
         yield s
 
 
-@pytest_asyncio.fixture
-async def create_team(client):
-    async def _create_team(
-        name: str = "Backend",
-        description: str = "Backend team",
-    ):
-        response = await client.post(
-            "api/team/", json={"name": name, "description": description}
-        )
-
-        assert response.status_code == 200, response.json()
-        return response.json()
-
-    return _create_team
-
-
-@pytest_asyncio.fixture
-async def authenticated_user(session):
+async def _create_user(
+    session: AsyncSession,
+    role: UserRole,
+    email: str,
+    username: str,
+):
     user = User(
-        email="test@test.com",
-        username="testuser",
+        email=email,
+        username=username,
         hashed_password="fakehash",
+        role=role,
     )
 
     session.add(user)
     await session.commit()
     await session.refresh(user)
 
-    async def override_get_current_user():
-        return user
+    return user
 
-    main_app.dependency_overrides[get_current_user] = override_get_current_user
 
-    yield user
+@pytest_asyncio.fixture
+async def admin_user(session):
+    return await _create_user(
+        session,
+        UserRole.ADMIN,
+        "admin@test.com",
+        "admin",
+    )
 
-    main_app.dependency_overrides.pop(get_current_user, None)
+
+@pytest_asyncio.fixture
+async def team_lead_user(session):
+    return await _create_user(
+        session,
+        UserRole.TEAM_LEAD,
+        "lead@test.com",
+        "lead",
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_user(session):
+    return await _create_user(
+        session,
+        UserRole.WORKER,
+        "worker@test.com",
+        "worker",
+    )
+
+
+class AuthenticatedClient:
+    def __init__(self, client: AsyncClient, user: User):
+        self.client = client
+        self.user = user
+
+    def _activate(self):
+        async def override_get_current_user():
+            return self.user
+
+        main_app.dependency_overrides[get_current_user] = override_get_current_user
+
+    async def get(self, *args, **kwargs):
+        self._activate()
+        return await self.client.get(*args, **kwargs)
+
+    async def post(self, *args, **kwargs):
+        self._activate()
+        return await self.client.post(*args, **kwargs)
+
+    async def patch(self, *args, **kwargs):
+        self._activate()
+        return await self.client.patch(*args, **kwargs)
+
+    async def delete(self, *args, **kwargs):
+        self._activate()
+        return await self.client.delete(*args, **kwargs)
+
+
+@pytest_asyncio.fixture
+async def admin_client(client, admin_user):
+    return AuthenticatedClient(client, admin_user)
+
+
+@pytest_asyncio.fixture
+async def team_lead_client(client, team_lead_user):
+    return AuthenticatedClient(client, team_lead_user)
+
+
+@pytest_asyncio.fixture
+async def worker_client(client, worker_user):
+    return AuthenticatedClient(client, worker_user)
+
+
+@pytest_asyncio.fixture
+async def create_team(admin_client):
+    async def _create_team(
+        name: str = "Backend",
+        description: str = "Backend team",
+    ):
+        response = await admin_client.post(
+            "/api/team/", json={"name": name, "description": description}
+        )
+
+        assert response.status_code == 200, response.json()
+        return response.json()
+
+    return _create_team

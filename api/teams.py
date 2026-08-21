@@ -34,11 +34,11 @@ router = APIRouter(tags=["Teams"])
 
 @router.post("/", response_model=TeamRead)
 async def create(
-    team: TeamCreate,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    team: TeamCreate,
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await create_team_service(
@@ -82,11 +82,11 @@ async def get_my_team(
 
 @router.get("/{team_id}/", response_model=TeamRead)
 async def get_team(
-    team_id: int,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    team_id: int,
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_team_by_id_service(

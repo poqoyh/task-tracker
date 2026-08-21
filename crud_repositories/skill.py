@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import Skill
@@ -45,7 +45,7 @@ async def get_skill_by_name(
     return result
 
 
-async def get_all_skills(
+async def get_skills(
     session: AsyncSession,
     limit: int,
     offset: int,
@@ -56,6 +56,12 @@ async def get_all_skills(
     result = await session.scalars(stmt)
 
     return result.all()
+
+
+async def count_skills(session: AsyncSession) -> int:
+    result = await session.scalar(select(func.count()).select_from(Skill))
+
+    return result or 0
 
 
 async def update_skill(

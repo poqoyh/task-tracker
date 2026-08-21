@@ -95,16 +95,22 @@ async def get_team(
     )
 
 
-@router.get("/{team_id}/members", response_model=list[UserShortRead])
+@router.get("/{team_id}/members", response_model=PaginatedResponse[UserShortRead])
 async def get_team_members(
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
     team_id: int,
+    pagination: Annotated[PaginationParams, Depends()],
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
-    return await get_team_members_service(session=session, team_id=team_id)
+    return await get_team_members_service(
+        session=session,
+        team_id=team_id,
+        limit=pagination.limit,
+        offset=pagination.offset,
+    )
 
 
 @router.patch("/{team_id}/", response_model=TeamRead)

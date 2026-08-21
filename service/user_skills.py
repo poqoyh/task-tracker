@@ -53,8 +53,8 @@ async def assign_skill_to_user_service(
 async def update_experience_months_service(
     session: AsyncSession,
     user_id: int,
-    new_experience: int,
     skill_id: int,
+    new_experience: int,
 ):
     await get_user_by_id_service(session=session, user_id=user_id)
 

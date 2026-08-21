@@ -70,8 +70,8 @@ async def add_skill_to_user(
 async def update_user_skill(
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
     user_id: int,
-    new_experience: int,
     skill_id: int,
+    new_experience: int,
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await update_experience_months_service(

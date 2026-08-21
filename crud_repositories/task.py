@@ -1,5 +1,5 @@
 from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession, result
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import Task
 from schemas.tasks import TaskCreate

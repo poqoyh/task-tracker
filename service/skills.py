@@ -7,10 +7,29 @@ from crud_repositories.skill import (
     delete_skill,
     get_skill_by_name,
     update_skill,
+    get_skills,
+    count_skills,
 )
 from crud_repositories.user_skill import skill_has_user
+from schemas.pagination import PaginatedResponse
 
-from schemas.skill import SkillUpdate
+from schemas.skill import SkillUpdate, SkillShortRead
+
+
+async def get_skills_service(
+    session: AsyncSession,
+    limit: int,
+    offset: int,
+) -> PaginatedResponse[SkillShortRead]:
+    items = await get_skills(session=session, limit=limit, offset=offset)
+    total = await count_skills(session=session)
+
+    return PaginatedResponse[SkillShortRead](
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 async def get_skill_by_id_service(

@@ -90,6 +90,7 @@ async def delete_user_skill(
     ],
     user_id: int,
     skill_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     await delete_user_skill_service(session=session, user_id=user_id, skill_id=skill_id)
     return {"message": "Skill deleted successfully."}

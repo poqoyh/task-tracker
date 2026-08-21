@@ -1,8 +1,7 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import Team, User
-from schemas.team import TeamCreate
 
 
 async def create_team(
@@ -41,7 +40,7 @@ async def get_team_members(
     return result.all()
 
 
-async def get_all_teams(
+async def get_teams(
     session: AsyncSession,
     limit: int,
     offset: int,
@@ -52,6 +51,12 @@ async def get_all_teams(
     result = await session.scalars(stmt)
 
     return result.all()
+
+
+async def count_teams(session: AsyncSession) -> int:
+    result = await session.scalar(select(func.count()).select_from(Team))
+
+    return result or 0
 
 
 async def update_team(

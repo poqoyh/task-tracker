@@ -1,7 +1,6 @@
 import pytest
 
-from auth.dependencies import get_current_user
-from db.models import Team, User
+from db.models import User
 
 pytestmark = pytest.mark.asyncio
 
@@ -11,8 +10,8 @@ Create team
 """
 
 
-async def test_create_team_success(client):
-    response = await client.post(
+async def test_create_team_success(admin_client):
+    response = await admin_client.post(
         "/api/team/", json={"name": "Backend", "description": "Backend team"}
     )
 
@@ -23,24 +22,24 @@ async def test_create_team_success(client):
     assert body["description"] == "Backend team"
 
     team_id = body["id"]
-    get_response = await client.get(f"/api/team/{team_id}/")
+    get_response = await admin_client.get(f"/api/team/{team_id}/")
     assert get_response.status_code == 200
     assert get_response.json()["name"] == "Backend"
 
 
-async def test_create_team_missing_description_returns_422(client):
+async def test_create_team_missing_description_returns_422(admin_client):
 
-    response = await client.post("/api/team/", json={"name": "Backend"})
+    response = await admin_client.post("/api/team/", json={"name": "Backend"})
 
     assert response.status_code == 422
 
 
-async def test_create_team_duplicate_name_fails(client, create_team):
+async def test_create_team_duplicate_name_fails(admin_client, create_team):
 
     await create_team()
 
-    response = await client.post(
-        "api/team/",
+    response = await admin_client.post(
+        "/api/team/",
         json={"name": "Backend", "description": "Second team"},
     )
 
@@ -53,7 +52,7 @@ Get teams
 """
 
 
-async def test_get_teams_success(client, create_team):
+async def test_get_teams_success(admin_client, create_team):
 
     await create_team()
     await create_team(
@@ -61,22 +60,28 @@ async def test_get_teams_success(client, create_team):
         description="Frontend team",
     )
 
-    response = await client.get("/api/team/")
+    response = await admin_client.get("/api/team/")
 
     assert response.status_code == 200
 
     body = response.json()
-    assert len(body) == 2
 
-    assert {team["name"] for team in body} == {"Backend", "Frontend"}
+    assert len(body["items"]) == 2
+
+    assert {team["name"] for team in body["items"]} == {"Backend", "Frontend"}
+
+    assert body["total"] == 2
 
 
-async def test_get_teams_empty_list(client):
+async def test_get_teams_empty_list(admin_client):
 
-    response = await client.get("/api/team/")
+    response = await admin_client.get("/api/team/")
 
-    assert response.status_code == 200
-    assert response.json() == []
+    body = response.json()
+
+    assert body["items"] == []
+
+    assert body["total"] == 0
 
 
 """
@@ -84,23 +89,27 @@ Get my team
 """
 
 
-async def test_get_my_team_success(client, session, create_team, authenticated_user):
+async def test_get_my_team_success(
+    worker_client,
+    worker_user,
+    session,
+    create_team,
+):
 
     team = await create_team()
-    authenticated_user.team_id = team["id"]
 
-    session.add(authenticated_user)
+    worker_user.team_id = team["id"]
     await session.commit()
 
-    response = await client.get("/api/team/me/team/")
+    response = await worker_client.get("/api/team/me/team/")
 
     assert response.status_code == 200
     assert response.json()["name"] == "Backend"
 
 
-async def test_get_my_team_if_team_is_none(client, authenticated_user):
+async def test_get_my_team_if_team_is_none(worker_client):
 
-    response = await client.get("/api/team/me/team/")
+    response = await worker_client.get("/api/team/me/team/")
 
     assert response.status_code == 404
     assert response.json()["detail"] == "User is not in a team"
@@ -111,11 +120,11 @@ Get team by id
 """
 
 
-async def test_get_team_by_id_success(client, create_team):
+async def test_get_team_by_id_success(admin_client, create_team):
 
     team = await create_team(name="Backend", description="Backend developer team")
 
-    response = await client.get(f"/api/team/{team["id"]}/")
+    response = await admin_client.get(f"/api/team/{team['id']}/")
 
     assert response.status_code == 200
     body = response.json()
@@ -124,9 +133,9 @@ async def test_get_team_by_id_success(client, create_team):
     assert body["description"] == "Backend developer team"
 
 
-async def test_get_team_by_id_not_found(client):
+async def test_get_team_by_id_not_found(admin_client):
 
-    response = await client.get("/api/team/999/")
+    response = await admin_client.get("/api/team/999/")
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Team not found."
@@ -137,7 +146,7 @@ Get team members
 """
 
 
-async def test_get_team_members_success(client, session, create_team):
+async def test_get_team_members_success(admin_client, session, create_team):
     team = await create_team()
 
     user_1 = User(
@@ -157,27 +166,32 @@ async def test_get_team_members_success(client, session, create_team):
     session.add_all([user_1, user_2])
     await session.commit()
 
-    response = await client.get(f"/api/team/{team['id']}/members")
+    response = await admin_client.get(f"/api/team/{team['id']}/members")
 
     assert response.status_code == 200
 
     body = response.json()
 
-    assert len(body) == 2
-    assert {user["username"] for user in body} == {"user1", "user2"}
+    assert len(body["items"]) == 2
+    assert {user["username"] for user in body["items"]} == {
+        "user1",
+        "user2",
+    }
+    assert body["total"] == 2
 
 
-async def test_get_team_members_team_empty(client, create_team):
+async def test_get_team_members_team_empty(admin_client, create_team):
 
     team = await create_team()
 
-    response = await client.get(f"/api/team/{team['id']}/members")
+    response = await admin_client.get(f"/api/team/{team['id']}/members")
 
     assert response.status_code == 200
 
     body = response.json()
 
-    assert len(body) == 0
+    assert body["items"] == []
+    assert body["total"] == 0
 
 
 """
@@ -185,10 +199,10 @@ Update team
 """
 
 
-async def test_update_team_success_with_two_params(client, create_team):
+async def test_update_team_success_with_two_params(admin_client, create_team):
     team = await create_team()
 
-    response = await client.patch(
+    response = await admin_client.patch(
         f"/api/team/{team['id']}/",
         json={"name": "new_name", "description": "new_description"},
     )
@@ -201,10 +215,10 @@ async def test_update_team_success_with_two_params(client, create_team):
     assert body["description"] == "new_description"
 
 
-async def test_update_team_success_with_name(client, create_team):
+async def test_update_team_success_with_name(admin_client, create_team):
     team = await create_team()
 
-    response = await client.patch(
+    response = await admin_client.patch(
         f"/api/team/{team['id']}/",
         json={"name": "new_name"},
     )
@@ -217,10 +231,10 @@ async def test_update_team_success_with_name(client, create_team):
     assert body["description"] == "Backend team"
 
 
-async def test_update_team_success_with_description(client, create_team):
+async def test_update_team_success_with_description(admin_client, create_team):
     team = await create_team()
 
-    response = await client.patch(
+    response = await admin_client.patch(
         f"/api/team/{team['id']}/",
         json={"description": "new_description"},
     )
@@ -233,10 +247,10 @@ async def test_update_team_success_with_description(client, create_team):
     assert body["description"] == "new_description"
 
 
-async def test_update_team_success_with_empty(client, create_team):
+async def test_update_team_success_with_empty(admin_client, create_team):
     team = await create_team()
 
-    response = await client.patch(f"/api/team/{team['id']}/", json={})
+    response = await admin_client.patch(f"/api/team/{team['id']}/", json={})
 
     assert response.status_code == 200
 
@@ -251,7 +265,7 @@ Assign user to team
 """
 
 
-async def test_assign_user_to_team(client, session, create_team):
+async def test_assign_user_to_team(admin_client, session, create_team):
     team = await create_team()
 
     user_1 = User(
@@ -265,7 +279,7 @@ async def test_assign_user_to_team(client, session, create_team):
     await session.commit()
     await session.refresh(user_1)
 
-    response = await client.patch(f"/api/team/{user_1.id}/{team["id"]}")
+    response = await admin_client.patch(f"/api/team/{user_1.id}/{team['id']}")
 
     assert response.status_code == 200
 
@@ -274,21 +288,26 @@ async def test_assign_user_to_team(client, session, create_team):
     assert body["team"]["id"] == team["id"]
 
 
-async def test_assign_user_to_team_if_team_id_is_not_none(client, session, create_team):
-    team = await create_team()
+async def test_assign_user_to_team_if_team_id_is_not_none(
+    admin_client, session, create_team
+):
+
+    backend_team = await create_team()
+
+    frontend_team = await create_team(name="Frontend", description="Frontend team")
 
     user_1 = User(
         username="user1",
         email="user1@mail.com",
         hashed_password="fake123",
-        team_id=1,
+        team_id=backend_team["id"],
     )
 
     session.add(user_1)
     await session.commit()
     await session.refresh(user_1)
 
-    response = await client.patch(f"/api/team/{user_1.id}/{team["id"]}")
+    response = await admin_client.patch(f"/api/team/{user_1.id}/{frontend_team['id']}")
 
     assert response.status_code == 409
     assert response.json()["detail"] == "User already in a team"
@@ -299,7 +318,7 @@ Remove user from team
 """
 
 
-async def test_remove_user_from_team_success(client, session, create_team):
+async def test_remove_user_from_team_success(admin_client, session, create_team):
     team = await create_team()
 
     user_1 = User(
@@ -313,7 +332,7 @@ async def test_remove_user_from_team_success(client, session, create_team):
     await session.commit()
     await session.refresh(user_1)
 
-    response = await client.patch(f"/api/team/remove-user/{user_1.id}")
+    response = await admin_client.patch(f"/api/team/remove-user/{user_1.id}")
 
     assert response.status_code == 200
 
@@ -322,7 +341,7 @@ async def test_remove_user_from_team_success(client, session, create_team):
     assert body["team"] is None
 
 
-async def test_remove_user_from_team_if_team_none(client, session):
+async def test_remove_user_from_team_if_team_none(admin_client, session):
 
     user_1 = User(
         username="user1",
@@ -335,7 +354,7 @@ async def test_remove_user_from_team_if_team_none(client, session):
     await session.commit()
     await session.refresh(user_1)
 
-    response = await client.patch(f"/api/team/remove-user/{user_1.id}")
+    response = await admin_client.patch(f"/api/team/remove-user/{user_1.id}")
 
     assert response.status_code == 409
     assert response.json()["detail"] == "User is not in a team"

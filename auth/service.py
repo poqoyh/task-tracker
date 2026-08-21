@@ -8,16 +8,19 @@ from crud_repositories.user import (
     get_user_by_id,
     update_user,
     update_user_role,
+    count_users,
+    get_all_users,
 )
 
 from auth.hashing import hash_password, validate_password
-from db.models import User
 from db.models.user import UserRole
+from schemas.pagination import PaginatedResponse
 
 from schemas.user import (
     UserCreate,
     UserLogin,
     UserUpdate,
+    UserShortRead,
 )
 
 
@@ -55,6 +58,22 @@ async def authenticate_user_service(
             detail="Invalid credentials",
         )
     return user
+
+
+async def get_users_service(
+    session: AsyncSession,
+    limit: int,
+    offset: int,
+) -> PaginatedResponse[UserShortRead]:
+    items = await get_all_users(session=session, limit=limit, offset=offset)
+    total = await count_users(session)
+
+    return PaginatedResponse[UserShortRead](
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 async def get_user_by_id_service(

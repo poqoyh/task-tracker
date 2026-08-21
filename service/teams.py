@@ -11,10 +11,29 @@ from crud_repositories.team import (
     remove_user_from_team,
     get_team_members,
     create_team,
+    get_teams,
+    count_teams,
 )
 from crud_repositories.user import get_user_by_id_with_team
+from schemas.pagination import PaginatedResponse
 
-from schemas.team import TeamUpdate, TeamCreate
+from schemas.team import TeamUpdate, TeamCreate, TeamRead
+
+
+async def get_teams_service(
+    session: AsyncSession,
+    limit: int,
+    offset: int,
+) -> PaginatedResponse[TeamRead]:
+    items = await get_teams(session=session, limit=limit, offset=offset)
+    total = await count_teams(session=session)
+
+    return PaginatedResponse[TeamRead](
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 async def get_team_by_id_service(

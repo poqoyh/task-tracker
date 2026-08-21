@@ -81,8 +81,8 @@ async def update_skill_service(
 
 
 async def delete_skill_service(
-    skill_id: int,
     session: AsyncSession,
+    skill_id: int,
 ):
     if await skill_has_user(skill_id=skill_id, session=session):
         raise HTTPException(

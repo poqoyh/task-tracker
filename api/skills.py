@@ -10,7 +10,7 @@ from fastapi import (
 from auth.dependencies import require_role
 from db import db_helper
 from db.models.user import UserRole, User
-from schemas.pagination import PaginationParams
+from schemas.pagination import PaginationParams, PaginatedResponse
 
 from schemas.skill import (
     SkillCreate,
@@ -20,7 +20,6 @@ from schemas.skill import (
 
 from crud_repositories.skill import (
     create_skill,
-    get_all_skills,
 )
 
 from service.skills import (
@@ -28,6 +27,7 @@ from service.skills import (
     get_skill_by_id_service,
     get_skill_by_name_service,
     update_skill_service,
+    get_skills_service,
 )
 
 router = APIRouter(tags=["Skills"])
@@ -45,8 +45,8 @@ async def skill_create(
     return await create_skill(session=session, creating_skill=creating_skill)
 
 
-@router.get("/", response_model=list[SkillShortRead])
-async def get_skills_all(
+@router.get("/", response_model=PaginatedResponse[SkillShortRead])
+async def get_all_skills(
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
@@ -54,7 +54,7 @@ async def get_skills_all(
     pagination: Annotated[PaginationParams, Depends()],
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
-    return await get_all_skills(
+    return await get_skills_service(
         session, limit=pagination.limit, offset=pagination.offset
     )
 

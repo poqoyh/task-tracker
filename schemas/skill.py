@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class SkillBase(BaseModel):
@@ -14,4 +14,6 @@ class SkillUpdate(SkillBase):
 
 
 class SkillShortRead(SkillBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int

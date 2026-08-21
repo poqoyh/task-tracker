@@ -32,8 +32,16 @@ async def get_team_by_id(
 async def get_team_members(
     session: AsyncSession,
     team_id: int,
+    limit: int,
+    offset: int,
 ) -> list[User]:
-    stmt = select(User).where(User.team_id == team_id).order_by(User.id)
+    stmt = (
+        select(User)
+        .where(User.team_id == team_id)
+        .order_by(User.id)
+        .limit(limit)
+        .offset(offset)
+    )
 
     result = await session.scalars(stmt)
 

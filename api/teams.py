@@ -11,13 +11,11 @@ from auth.dependencies import get_current_user, require_role
 from db import db_helper
 from db.models import User
 from db.models.user import UserRole
-from schemas.pagination import PaginationParams
+from schemas.pagination import PaginationParams, PaginatedResponse
 
 from schemas.team import TeamCreate, TeamRead, TeamUpdate
 
-from crud_repositories.team import (
-    get_all_teams,
-)
+
 from schemas.user import UserShortRead, UserReadWithTeam
 
 from service.teams import (
@@ -28,6 +26,7 @@ from service.teams import (
     get_team_members_service,
     get_current_user_team_service,
     create_team_service,
+    get_teams_service,
 )
 
 router = APIRouter(tags=["Teams"])
@@ -48,8 +47,8 @@ async def create(
     )
 
 
-@router.get("/", response_model=list[TeamRead])
-async def get_teams(
+@router.get("/", response_model=PaginatedResponse[TeamRead])
+async def get_all_teams(
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
@@ -57,7 +56,7 @@ async def get_teams(
     pagination: Annotated[PaginationParams, Depends()],
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
-    return await get_all_teams(
+    return await get_teams_service(
         session=session, limit=pagination.limit, offset=pagination.offset
     )
 

@@ -60,11 +60,11 @@ async def get_user_by_token(
 
 
 async def get_current_user(
-    request: Request,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    request: Request,
 ) -> User:
     return await get_user_by_token(
         request=request,

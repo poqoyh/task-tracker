@@ -32,8 +32,8 @@ async def register_user_service(
 
     user = await create_user(
         session=session,
-        creating_user=creating_user,
         hashed_password=hashed_password,
+        creating_user=creating_user,
     )
 
     return {
@@ -47,7 +47,9 @@ async def authenticate_user_service(
     session: AsyncSession,
     user_login: UserLogin,
 ):
-    user = await get_user_by_identifier(user_login.identifier, session)
+    user = await get_user_by_identifier(
+        session=session, identifier=user_login.identifier
+    )
 
     if not user or not validate_password(
         user_login.password,

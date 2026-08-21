@@ -44,23 +44,23 @@ router = APIRouter(tags=["Users"])
 
 @router.post("/register")
 async def register(
-    user_create: UserCreate,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    user_create: UserCreate,
 ):
     return await register_user_service(session=session, creating_user=user_create)
 
 
 @router.post("/login")
 async def login(
-    response: Response,
-    user_login: UserLogin,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
+    user_login: UserLogin,
+    response: Response,
 ):
     user = await authenticate_user_service(session, user_login)
 

@@ -9,8 +9,8 @@ from schemas.user import UserCreate
 
 async def create_user(
     session: AsyncSession,
-    creating_user: UserCreate,
     hashed_password: str,
+    creating_user: UserCreate,
 ) -> User:
 
     user_data = creating_user.model_dump()
@@ -102,8 +102,8 @@ async def get_user_profile(
 
 
 async def get_user_by_identifier(
-    identifier: str,
     session: AsyncSession,
+    identifier: str,
 ) -> User | None:
     field = User.email if "@" in identifier else User.username
 

@@ -21,14 +21,15 @@ from auth.service import (
     get_user_by_id_service,
     update_user_service,
     change_user_role_service,
+    get_users_service,
 )
 from core.config import settings
-from crud_repositories.user import get_all_users, get_user_profile
+from crud_repositories.user import get_user_profile
 
 from db import db_helper
 from db.models import User
 from db.models.user import UserRole
-from schemas.pagination import PaginationParams
+from schemas.pagination import PaginationParams, PaginatedResponse
 
 from schemas.user import (
     UserCreate,
@@ -110,7 +111,7 @@ async def refresh(
     return {"message": "Token updated successfully"}
 
 
-@router.get("/", response_model=list[UserShortRead])
+@router.get("/", response_model=PaginatedResponse[UserShortRead])
 async def get_users(
     session: Annotated[
         AsyncSession,
@@ -119,7 +120,7 @@ async def get_users(
     pagination: Annotated[PaginationParams, Depends()],
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
-    return await get_all_users(
+    return await get_users_service(
         session, limit=pagination.limit, offset=pagination.offset
     )
 

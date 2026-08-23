@@ -29,4 +29,8 @@ echo "Postgres is READY!"
 echo "Running migrations"
 poetry run alembic upgrade head
 
+echo "Seeding admin user"
+poetry run python -m scripts.create_admin
+
 echo "READY! Run: poetry run python main.py"
+echo "Login with admin / admin for full access."

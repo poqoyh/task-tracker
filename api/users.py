@@ -172,14 +172,13 @@ async def update_user(
     ],
     user_id: int,
     user_update_data: UserUpdate,
-    _: User = Depends(
-        require_role(UserRole.ADMIN, UserRole.TEAM_LEAD, UserRole.WORKER)
-    ),
+    current_user: User = Depends(get_current_user),
 ):
     return await update_user_service(
         session=session,
         user_id=user_id,
         user_update_data=user_update_data,
+        current_user=current_user,
     )
 
 

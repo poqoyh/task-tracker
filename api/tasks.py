@@ -8,7 +8,7 @@ from fastapi import (
 )
 
 from auth.dependencies import require_role
-from crud_repositories.task import create_task, get_tasks
+from crud_repositories.task import create_task
 
 from db import db_helper
 from db.models import User

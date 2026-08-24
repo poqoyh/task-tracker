@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +14,10 @@ from crud_repositories.user import (
 )
 
 from auth.hashing import hash_password, validate_password
-from db.models.user import UserRole
+from auth.premissions import can_update_user
+
+
+from db.models.user import UserRole, User
 from schemas.pagination import PaginatedResponse
 
 from schemas.user import (
@@ -100,16 +104,29 @@ async def update_user_service(
     session: AsyncSession,
     user_id: int,
     user_update_data: UserUpdate,
+    current_user: User,
 ):
-    user = await get_user_by_id_service(session=session, user_id=user_id)
+    target_user = await get_user_by_id_service(session=session, user_id=user_id)
+
+    if not can_update_user(current_user=current_user, target_user=target_user):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to update this user"
+        )
 
     update_data = user_update_data.model_dump(exclude_unset=True)
 
-    return await update_user(
-        session=session,
-        user=user,
-        update_data=update_data,
-    )
+    try:
+        return await update_user(
+            session=session,
+            user=target_user,
+            update_data=update_data,
+        )
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Email or username already taken",
+        )
 
 
 async def change_user_role_service(

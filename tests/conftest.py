@@ -105,6 +105,16 @@ async def worker_user(session):
     )
 
 
+@pytest_asyncio.fixture
+async def second_worker_user(session):
+    return await _create_user(
+        session,
+        UserRole.WORKER,
+        "secondworker@test.com",
+        "second_worker",
+    )
+
+
 class AuthenticatedClient:
     def __init__(self, client: AsyncClient, user: User):
         self.client = client

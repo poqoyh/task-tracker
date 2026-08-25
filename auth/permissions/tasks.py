@@ -28,6 +28,10 @@ def can_manage_task(
     return False
 
 
+"""
+get_user_tasks"""
+
+
 def can_view_tasks(
     current_user: User,
     target_user: User,
@@ -44,5 +48,27 @@ def can_view_tasks(
 
     if current_user.role == UserRole.WORKER:
         return current_user.id == target_user.id
+
+    return False
+
+
+"""
+assign_task_to_user
+"""
+
+
+def can_assign_task(
+    current_user: User,
+    target_user: User,
+) -> bool:
+
+    if current_user.role == UserRole.ADMIN:
+        return True
+
+    if current_user.role == UserRole.TEAM_LEAD:
+        if current_user.team_id is None:
+            return False
+
+        return current_user.team_id == target_user.team_id
 
     return False

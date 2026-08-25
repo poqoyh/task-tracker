@@ -161,3 +161,189 @@ async def test_admin_get_task_success(
     assert len(body) == 1
     assert body[0]["id"] == task["id"]
     assert body[0]["name"] == "Test task"
+
+
+"""
+Update task
+"""
+
+
+async def test_admin_update_task_success(
+    session,
+    admin_client,
+    create_task,
+):
+    task = await create_task()
+
+    response = await admin_client.patch(
+        f"/api/task/{task["id"]}",
+        json={"name": "Updated Task Name", "description": "Updated Task Description"},
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["id"] == task["id"]
+    assert body["name"] == "Updated Task Name"
+    assert body["description"] == "Updated Task Description"
+
+
+async def test_team_lead_update_task_success(
+    session,
+    team_lead_client,
+    team_lead_user,
+    worker_user,
+    create_team,
+    create_task,
+):
+    team = await create_team()
+    task = await create_task()
+
+    team_lead_user.team_id = team["id"]
+    worker_user.team_id = team["id"]
+
+    session.add_all([team_lead_user, worker_user])
+    await session.commit()
+
+    await team_lead_client.post(f"/api/task/{task['id']}/assign/{worker_user.id}")
+
+    response = await team_lead_client.patch(
+        f"/api/task/{task["id"]}",
+        json={"name": "Updated Task Name", "description": "Updated Task Description"},
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["id"] == task["id"]
+    assert body["name"] == "Updated Task Name"
+    assert body["description"] == "Updated Task Description"
+
+
+async def test_team_lead_update_task_in_another_team(
+    session,
+    team_lead_client,
+    team_lead_user,
+    worker_user,
+    admin_client,
+    create_team,
+    create_task,
+):
+    team = await create_team()
+    team_2 = await create_team(
+        name="Frontend",
+        description="Frontend team",
+    )
+
+    task = await create_task()
+
+    team_lead_user.team_id = team["id"]
+    worker_user.team_id = team_2["id"]
+
+    session.add_all([team_lead_user, worker_user])
+    await session.commit()
+
+    await admin_client.post(f"/api/task/{task['id']}/assign/{worker_user.id}")
+
+    response = await team_lead_client.patch(
+        f"/api/task/{task["id"]}",
+        json={"name": "Updated Task Name", "description": "Updated Task Description"},
+    )
+
+    assert response.status_code == 403
+
+    body = response.json()
+
+    assert body["detail"] == "Not enough permissions to update this task"
+
+
+async def test_team_lead_update_unappointed_task(
+    session,
+    team_lead_client,
+    team_lead_user,
+    worker_user,
+    create_team,
+    create_task,
+):
+    team = await create_team()
+    task = await create_task()
+
+    team_lead_user.team_id = team["id"]
+    worker_user.team_id = team["id"]
+
+    session.add_all([team_lead_user, worker_user])
+    await session.commit()
+
+    response = await team_lead_client.patch(
+        f"/api/task/{task["id"]}",
+        json={"name": "Updated Task Name", "description": "Updated Task Description"},
+    )
+
+    assert response.status_code == 403
+
+    body = response.json()
+
+    assert body["detail"] == "Not enough permissions to update this task"
+
+
+async def test_team_lead_without_team_update_task(
+    session,
+    team_lead_client,
+    team_lead_user,
+    worker_user,
+    admin_client,
+    create_team,
+    create_task,
+):
+    team = await create_team()
+    task = await create_task()
+
+    worker_user.team_id = team["id"]
+
+    session.add(worker_user)
+    await session.commit()
+
+    await admin_client.post(f"/api/task/{task['id']}/assign/{worker_user.id}")
+
+    response = await team_lead_client.patch(
+        f"/api/task/{task["id"]}",
+        json={"name": "Updated Task Name", "description": "Updated Task Description"},
+    )
+
+    assert response.status_code == 403
+
+    body = response.json()
+
+    assert body["detail"] == "Not enough permissions to update this task"
+
+
+async def test_worker_update_his_task(
+    session,
+    worker_client,
+    worker_user,
+    admin_client,
+    create_team,
+    create_task,
+):
+    team = await create_team()
+    task = await create_task()
+
+    worker_user.team_id = team["id"]
+
+    session.add(worker_user)
+    await session.commit()
+
+    await admin_client.post(f"/api/task/{task['id']}/assign/{worker_user.id}")
+
+    response = await worker_client.patch(
+        f"/api/task/{task["id"]}",
+        json={"name": "Updated Task Name", "description": "Updated Task Description"},
+    )
+
+    assert response.status_code == 403
+
+    body = response.json()
+
+    assert body["detail"] == "Not enough permissions to update this task"

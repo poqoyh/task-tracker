@@ -172,3 +172,19 @@ async def create_team(admin_client):
         return response.json()
 
     return _create_team
+
+
+@pytest_asyncio.fixture
+async def create_task(admin_client):
+    async def _create_task(
+        name: str = "Test task",
+        description: str = "desk",
+    ):
+        response = await admin_client.post(
+            "/api/tasks/", json={"name": name, "description": description}
+        )
+
+        assert response.status_code == 200, response.json()
+        return response.json()
+
+    return _create_task

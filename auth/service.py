@@ -14,7 +14,7 @@ from crud_repositories.user import (
 )
 
 from auth.hashing import hash_password, validate_password
-from auth.premissions import can_update_user
+from auth.permissions.users import can_update_user
 
 
 from db.models.user import UserRole, User

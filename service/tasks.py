@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.permissions.tasks import can_manage_task
+from auth.permissions.tasks import can_manage_task, can_view_tasks
 from auth.service import get_user_by_id_service
 from crud_repositories.task import (
     get_task_by_id,
@@ -54,11 +54,14 @@ async def get_task_by_id_service(
 async def get_users_tasks_service(
     session: AsyncSession,
     user_id: int,
+    current_user: User,
 ):
-    await get_user_by_id_service(
-        session=session,
-        user_id=user_id,
-    )
+    target_user = await get_user_by_id_service(session=session, user_id=user_id)
+
+    if not can_view_tasks(current_user=current_user, target_user=target_user):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to view this user's tasks"
+        )
 
     return await get_users_tasks(session=session, user_id=user_id)
 

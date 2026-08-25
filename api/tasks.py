@@ -80,6 +80,7 @@ async def get_task_by_id(
         Depends(db_helper.session_getter),
     ],
     task_id: int,
+    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_task_by_id_service(session=session, task_id=task_id)
 
@@ -110,13 +111,14 @@ async def assign_task_to_user(
     ],
     task_id: int,
     user_id: int,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
 
     return await assign_task_to_user_service(
         session=session,
         task_id=task_id,
         user_id=user_id,
+        current_user=current_user,
     )
 
 

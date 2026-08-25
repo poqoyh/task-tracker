@@ -143,7 +143,7 @@ async def unassign_task_from_user_service(
 
     if not can_manage_task(current_user=current_user, task=task):
         raise HTTPException(
-            status_code=403, detail="Not enough permissions to update this task"
+            status_code=403, detail="Not enough permissions to unassign this task"
         )
 
     return await unassign_task(session=session, task=task)

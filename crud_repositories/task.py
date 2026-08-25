@@ -1,5 +1,6 @@
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from db.models import Task
 from schemas.tasks import TaskCreate
@@ -54,7 +55,7 @@ async def get_task_by_id(
     task_id: int,
 ) -> Task | None:
 
-    stmt = select(Task).where(Task.id == task_id)
+    stmt = select(Task).options(selectinload(Task.user)).where(Task.id == task_id)
 
     task = await session.scalars(stmt)
     return task.one_or_none()

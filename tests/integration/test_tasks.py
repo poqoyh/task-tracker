@@ -1,8 +1,27 @@
 import pytest
 
-from db.models import Task
-
 pytest = pytest.mark.asyncio
+
+
+"""
+Get task by id
+"""
+
+
+async def test_get_task_by_id_unauthenticated(client, create_task):
+    task = await create_task()
+
+    response = await client.get(f"/api/task/{task['id']}")
+
+    assert response.status_code == 401
+
+
+async def test_get_task_by_id_worker_forbidden(worker_client, create_task):
+    task = await create_task()
+
+    response = await worker_client.get(f"/api/task/{task['id']}")
+
+    assert response.status_code == 403
 
 
 """

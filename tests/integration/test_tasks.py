@@ -519,3 +519,152 @@ async def test_admin_assign_task_that_has_already_been_assigned(
     body = response.json()
 
     assert body["detail"] == "Task already assigned."
+
+
+"""
+Unassign task
+"""
+
+
+async def test_admin_unassign_task_to_worker(
+    session,
+    worker_user,
+    admin_client,
+    create_task,
+    create_team,
+):
+    task = await create_task()
+    team = await create_team()
+
+    worker_user.team_id = team["id"]
+
+    session.add(worker_user)
+    await session.commit()
+
+    assign_response = await admin_client.post(
+        f"/api/task/{task['id']}/assign/{worker_user.id}"
+    )
+
+    assert assign_response.status_code == 200
+
+    response = await admin_client.patch(f"/api/task/{task['id']}/unassign")
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["id"] == 1
+    assert body["user_id"] is None
+
+
+async def test_team_lead_unassign_task_to_worker(
+    session,
+    worker_user,
+    team_lead_client,
+    team_lead_user,
+    create_task,
+    create_team,
+):
+    task = await create_task()
+    team = await create_team()
+
+    worker_user.team_id = team["id"]
+    team_lead_user.team_id = team["id"]
+
+    session.add_all([team_lead_user, worker_user])
+    await session.commit()
+
+    assign_response = await team_lead_client.post(
+        f"/api/task/{task['id']}/assign/{worker_user.id}"
+    )
+
+    assert assign_response.status_code == 200
+
+    response = await team_lead_client.patch(f"/api/task/{task['id']}/unassign")
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["id"] == 1
+    assert body["user_id"] is None
+
+
+async def test_team_lead_unassign_task_to_worker_in_another_team(
+    session,
+    worker_user,
+    team_lead_client,
+    team_lead_user,
+    admin_client,
+    create_task,
+    create_team,
+):
+    task = await create_task()
+
+    team = await create_team()
+    team_2 = await create_team(
+        name="Frontend",
+        description="Frontend Team",
+    )
+
+    worker_user.team_id = team["id"]
+    team_lead_user.team_id = team_2["id"]
+
+    session.add_all([team_lead_user, worker_user])
+    await session.commit()
+
+    assign_response = await admin_client.post(
+        f"/api/task/{task['id']}/assign/{worker_user.id}"
+    )
+
+    assert assign_response.status_code == 200
+
+    response = await team_lead_client.patch(f"/api/task/{task['id']}/unassign")
+
+    assert response.status_code == 403
+
+    body = response.json()
+
+    assert body["detail"] == "Not enough permissions to unassign this task"
+
+
+async def test_admin_unassign_unappointed_task(
+    admin_client,
+    create_task,
+):
+    task = await create_task()
+
+    response = await admin_client.patch(f"/api/task/{task['id']}/unassign")
+
+    assert response.status_code == 409
+
+    body = response.json()
+
+    assert body["detail"] == "Task is not assigned."
+
+
+async def test_team_lead_unassign_unappointed_task_to_worker(
+    session,
+    worker_user,
+    team_lead_client,
+    team_lead_user,
+    create_task,
+    create_team,
+):
+    task = await create_task()
+
+    team = await create_team()
+
+    worker_user.team_id = team["id"]
+    team_lead_user.team_id = team["id"]
+
+    session.add_all([team_lead_user, worker_user])
+    await session.commit()
+
+    response = await team_lead_client.patch(f"/api/task/{task['id']}/unassign")
+
+    assert response.status_code == 409
+
+    body = response.json()
+
+    assert body["detail"] == "Task is not assigned."

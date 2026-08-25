@@ -126,21 +126,36 @@ class AuthenticatedClient:
 
         main_app.dependency_overrides[get_current_user] = override_get_current_user
 
+    def _deactivate(self):
+        main_app.dependency_overrides.pop(get_current_user, None)
+
     async def get(self, *args, **kwargs):
         self._activate()
-        return await self.client.get(*args, **kwargs)
+        try:
+            return await self.client.get(*args, **kwargs)
+        finally:
+            self._deactivate()
 
     async def post(self, *args, **kwargs):
         self._activate()
-        return await self.client.post(*args, **kwargs)
+        try:
+            return await self.client.post(*args, **kwargs)
+        finally:
+            self._deactivate()
 
     async def patch(self, *args, **kwargs):
         self._activate()
-        return await self.client.patch(*args, **kwargs)
+        try:
+            return await self.client.patch(*args, **kwargs)
+        finally:
+            self._deactivate()
 
     async def delete(self, *args, **kwargs):
         self._activate()
-        return await self.client.delete(*args, **kwargs)
+        try:
+            return await self.client.delete(*args, **kwargs)
+        finally:
+            self._deactivate()
 
 
 @pytest_asyncio.fixture

@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from auth.permissions.tasks import can_manage_task
 from auth.service import get_user_by_id_service
 from crud_repositories.task import (
     get_task_by_id,
@@ -11,7 +12,7 @@ from crud_repositories.task import (
     get_tasks,
     count_tasks,
 )
-from db.models import Task
+from db.models import Task, User
 from schemas.pagination import PaginatedResponse
 from schemas.tasks import TaskUpdate, TaskRead
 
@@ -66,11 +67,17 @@ async def update_task_service(
     session: AsyncSession,
     task_id: int,
     task_update: TaskUpdate,
+    current_user: User,
 ):
+
     task = await get_task_by_id_service(
         session=session,
         task_id=task_id,
     )
+    if not can_manage_task(current_user=current_user, task=task):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to update this task"
+        )
 
     update_data = task_update.model_dump(exclude_unset=True)
 

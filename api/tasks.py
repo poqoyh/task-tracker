@@ -64,9 +64,13 @@ async def get_user_tasks(
         Depends(db_helper.session_getter),
     ],
     user_id: int,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
-    return await get_users_tasks_service(session=session, user_id=user_id)
+    return await get_users_tasks_service(
+        session=session,
+        user_id=user_id,
+        current_user=current_user,
+    )
 
 
 @router.get("/{task_id}", response_model=TaskRead)

@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.permissions.tasks import can_manage_task, can_view_tasks
+from auth.permissions.tasks import can_manage_task, can_view_tasks, can_assign_task
 from auth.service import get_user_by_id_service
 from crud_repositories.task import (
     get_task_by_id,
@@ -95,6 +95,7 @@ async def assign_task_to_user_service(
     session: AsyncSession,
     task_id: int,
     user_id: int,
+    current_user: User,
 ):
     task = await get_task_by_id_service(
         session=session,
@@ -107,10 +108,15 @@ async def assign_task_to_user_service(
             detail="Task already assigned.",
         )
 
-    await get_user_by_id_service(
+    target_user = await get_user_by_id_service(
         session=session,
         user_id=user_id,
     )
+
+    if not can_assign_task(current_user=current_user, target_user=target_user):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to assign this task"
+        )
 
     return await assign_task_to_user(
         session=session,
@@ -129,15 +135,15 @@ async def unassign_task_from_user_service(
         task_id=task_id,
     )
 
-    if not can_manage_task(current_user=current_user, task=task):
-        raise HTTPException(
-            status_code=403, detail="Not enough permissions to update this task"
-        )
-
     if task.user_id is None:
         raise HTTPException(
             status_code=409,
             detail="Task is not assigned.",
+        )
+
+    if not can_manage_task(current_user=current_user, task=task):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to update this task"
         )
 
     return await unassign_task(session=session, task=task)

@@ -123,9 +123,10 @@ async def unassign_task(
         Depends(db_helper.session_getter),
     ],
     task_id: int,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
     return await unassign_task_from_user_service(
         session=session,
         task_id=task_id,
+        current_user=current_user,
     )

@@ -119,11 +119,17 @@ async def assign_task_to_user_service(
 async def unassign_task_from_user_service(
     session: AsyncSession,
     task_id: int,
+    current_user: User,
 ):
     task = await get_task_by_id_service(
         session=session,
         task_id=task_id,
     )
+
+    if not can_manage_task(current_user=current_user, task=task):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to update this task"
+        )
 
     if task.user_id is None:
         raise HTTPException(

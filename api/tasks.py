@@ -7,7 +7,7 @@ from fastapi import (
     Depends,
 )
 
-from auth.dependencies import require_role
+from auth.dependencies import require_role, get_current_user
 from crud_repositories.task import create_task
 
 from db import db_helper
@@ -70,13 +70,12 @@ async def get_user_tasks(
 
 
 @router.get("/{task_id}", response_model=TaskRead)
-async def get_task(
+async def get_task_by_id(
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
     task_id: int,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
     return await get_task_by_id_service(session=session, task_id=task_id)
 
@@ -89,12 +88,13 @@ async def update_task(
     ],
     task_id: int,
     task_update: TaskUpdate,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
     return await update_task_service(
         session=session,
         task_id=task_id,
         task_update=task_update,
+        current_user=current_user,
     )
 
 

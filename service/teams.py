@@ -161,15 +161,11 @@ async def assign_user_to_team_service(
     session: AsyncSession,
     user_id: int,
     team_id: int,
+    current_user: User,
 ):
     user = await get_user_by_id_service(
         session=session,
         user_id=user_id,
-    )
-
-    await get_team_by_id_service(
-        session=session,
-        team_id=team_id,
     )
 
     if user.team_id is not None:
@@ -177,6 +173,17 @@ async def assign_user_to_team_service(
             status_code=409,
             detail="User already in a team",
         )
+
+
+    team = await get_team_by_id_service(
+        session=session,
+        team_id=team_id,
+    )
+
+    if not can_manage_team(current_user=current_user, team=team):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to manage this team")
+
 
     await assign_user_to_team(
         session=session,

@@ -104,13 +104,14 @@ async def get_team_members(
     ],
     team_id: int,
     pagination: Annotated[PaginationParams, Depends()],
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
     return await get_team_members_service(
         session=session,
         team_id=team_id,
         limit=pagination.limit,
         offset=pagination.offset,
+        current_user=current_user,
     )
 
 

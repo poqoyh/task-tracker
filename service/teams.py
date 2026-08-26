@@ -90,8 +90,13 @@ async def get_team_members_service(
     team_id: int,
     limit: int,
     offset: int,
+    current_user: User,
 ) -> PaginatedResponse[UserShortRead]:
-    await get_team_by_id_service(session=session, team_id=team_id)
+    team = await get_team_by_id_service(session=session, team_id=team_id)
+
+    if not can_view_team(current_user=current_user,team=team):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to view this team")
 
     items = await get_team_members(
         session=session, team_id=team_id, limit=limit, offset=offset

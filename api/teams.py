@@ -39,7 +39,7 @@ async def create(
         Depends(db_helper.session_getter),
     ],
     team: TeamCreate,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    _: User = Depends(require_role(UserRole.ADMIN)),
 ):
     return await create_team_service(
         session=session,
@@ -54,7 +54,7 @@ async def get_all_teams(
         Depends(db_helper.session_getter),
     ],
     pagination: Annotated[PaginationParams, Depends()],
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    _: User = Depends(require_role(UserRole.ADMIN)),
 ):
     return await get_teams_service(
         session=session, limit=pagination.limit, offset=pagination.offset

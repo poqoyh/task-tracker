@@ -168,17 +168,16 @@ async def assign_user_to_team_service(
         user_id=user_id,
     )
 
+    team = await get_team_by_id_service(
+        session=session,
+        team_id=team_id,
+    )
+
     if user.team_id is not None:
         raise HTTPException(
             status_code=409,
             detail="User already in a team",
         )
-
-
-    team = await get_team_by_id_service(
-        session=session,
-        team_id=team_id,
-    )
 
     if not can_manage_team(current_user=current_user, team=team):
         raise HTTPException(

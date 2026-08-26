@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from auth.permissions.teams import can_view_team
 from auth.service import get_user_by_id_service
 from crud_repositories.team import (
     get_team_by_id,
@@ -16,6 +17,7 @@ from crud_repositories.team import (
     count_team_members,
 )
 from crud_repositories.user import get_user_by_id_with_team
+from db.models import User
 from schemas.pagination import PaginatedResponse
 
 from schemas.team import TeamUpdate, TeamCreate, TeamRead
@@ -50,6 +52,17 @@ async def get_team_by_id_service(
             detail="Team not found.",
         )
 
+    return team
+
+async def get_team_service(session: AsyncSession,
+                           team_id: int,
+                           current_user: User,):
+    team = await get_team_by_id_service(session=session,team_id=team_id)
+
+    if not can_view_team(current_user=current_user, team=team):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to view this team"
+        )
     return team
 
 

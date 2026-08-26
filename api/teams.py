@@ -156,10 +156,11 @@ async def assign_user_to_team(
     ],
     user_id: int,
     team_id: int,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
     return await assign_user_to_team_service(
         session=session,
         user_id=user_id,
         team_id=team_id,
+        current_user=current_user,
     )

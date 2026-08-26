@@ -10,3 +10,14 @@ def can_view_team(current_user: User, team: Team) -> bool:
         return current_user.team_id == team.id
 
     return False
+
+
+
+def can_manage_team(current_user: User, team: Team) -> bool:
+    if current_user.role == UserRole.ADMIN:
+        return True
+
+    if current_user.role == UserRole.TEAM_LEAD:
+        return current_user.team_id == team.id
+
+    return False

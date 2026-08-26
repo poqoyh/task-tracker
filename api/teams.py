@@ -123,12 +123,13 @@ async def update_team(
     ],
     team_id: int,
     update_data: TeamUpdate,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
     return await update_team_service(
         session=session,
         team_id=team_id,
         update_data=update_data,
+        current_user=current_user,
     )
 
 

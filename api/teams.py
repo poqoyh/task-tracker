@@ -19,7 +19,6 @@ from schemas.team import TeamCreate, TeamRead, TeamUpdate
 from schemas.user import UserShortRead, UserReadWithTeam
 
 from service.teams import (
-    get_team_by_id_service,
     update_team_service,
     assign_user_to_team_service,
     remove_user_from_team_service,
@@ -27,6 +26,7 @@ from service.teams import (
     get_current_user_team_service,
     create_team_service,
     get_teams_service,
+    get_team_service,
 )
 
 router = APIRouter(tags=["Teams"])
@@ -87,11 +87,12 @@ async def get_team(
         Depends(db_helper.session_getter),
     ],
     team_id: int,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user)
 ):
-    return await get_team_by_id_service(
+    return await get_team_service(
         session=session,
         team_id=team_id,
+        current_user=current_user,
     )
 
 

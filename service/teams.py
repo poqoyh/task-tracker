@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.permissions.teams import can_view_team
+from auth.permissions.teams import can_view_team, can_manage_team
 from auth.service import get_user_by_id_service
 from crud_repositories.team import (
     get_team_by_id,
@@ -112,19 +112,31 @@ async def update_team_service(
     session: AsyncSession,
     team_id: int,
     update_data: TeamUpdate,
+    current_user: User,
 ):
     team = await get_team_by_id_service(
         session=session,
         team_id=team_id,
     )
 
+    if not can_manage_team(current_user=current_user, team=team):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to manage this team")
+
     update_data = update_data.model_dump(exclude_unset=True)
 
-    return await update_team(
+    try:
+        return await update_team(
         session=session,
         team=team,
         update_data=update_data,
-    )
+        )
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Name already taken",
+        )
 
 
 async def get_current_user_team_service(

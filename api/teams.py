@@ -140,11 +140,12 @@ async def remove_user_from_team(
         Depends(db_helper.session_getter),
     ],
     user_id: int,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
     return await remove_user_from_team_service(
         session=session,
         user_id=user_id,
+        current_user=current_user,
     )
 
 

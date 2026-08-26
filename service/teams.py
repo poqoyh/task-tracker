@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.permissions.teams import can_view_team, can_manage_team
+from auth.permissions.teams import can_view_team, can_manage_team, can_remove_user_from_team
 from auth.service import get_user_by_id_service
 from crud_repositories.team import (
     get_team_by_id,
@@ -197,19 +197,25 @@ async def assign_user_to_team_service(
 async def remove_user_from_team_service(
     session: AsyncSession,
     user_id: int,
+    current_user: User,
 ):
-    user = await get_user_by_id_service(
+    target_user = await get_user_by_id_service(
         session=session,
         user_id=user_id,
     )
 
-    if user.team_id is None:
+    if target_user.team_id is None:
         raise HTTPException(
             status_code=409,
             detail="User is not in a team",
         )
 
+
+    if not can_remove_user_from_team(current_user=current_user, target_user=target_user):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to remove user from this team")
+
     return await remove_user_from_team(
         session=session,
-        user=user,
+        user=target_user,
     )

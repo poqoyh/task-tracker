@@ -3,7 +3,11 @@ from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.permissions.teams import can_view_team, can_manage_team, can_remove_user_from_team
+from auth.permissions.teams import (
+    can_view_team,
+    can_manage_team,
+    can_remove_user_from_team,
+)
 from auth.service import get_user_by_id_service
 from crud_repositories.team import (
     get_team_by_id,
@@ -54,10 +58,13 @@ async def get_team_by_id_service(
 
     return team
 
-async def get_team_service(session: AsyncSession,
-                           team_id: int,
-                           current_user: User,):
-    team = await get_team_by_id_service(session=session,team_id=team_id)
+
+async def get_team_service(
+    session: AsyncSession,
+    team_id: int,
+    current_user: User,
+):
+    team = await get_team_by_id_service(session=session, team_id=team_id)
 
     if not can_view_team(current_user=current_user, team=team):
         raise HTTPException(
@@ -94,9 +101,10 @@ async def get_team_members_service(
 ) -> PaginatedResponse[UserShortRead]:
     team = await get_team_by_id_service(session=session, team_id=team_id)
 
-    if not can_view_team(current_user=current_user,team=team):
+    if not can_view_team(current_user=current_user, team=team):
         raise HTTPException(
-            status_code=403, detail="Not enough permissions to view this team")
+            status_code=403, detail="Not enough permissions to view this team"
+        )
 
     items = await get_team_members(
         session=session, team_id=team_id, limit=limit, offset=offset
@@ -121,15 +129,16 @@ async def update_team_service(
 
     if not can_manage_team(current_user=current_user, team=team):
         raise HTTPException(
-            status_code=403, detail="Not enough permissions to manage this team")
+            status_code=403, detail="Not enough permissions to manage this team"
+        )
 
     update_data = update_data.model_dump(exclude_unset=True)
 
     try:
         return await update_team(
-        session=session,
-        team=team,
-        update_data=update_data,
+            session=session,
+            team=team,
+            update_data=update_data,
         )
     except IntegrityError:
         await session.rollback()
@@ -181,8 +190,8 @@ async def assign_user_to_team_service(
 
     if not can_manage_team(current_user=current_user, team=team):
         raise HTTPException(
-            status_code=403, detail="Not enough permissions to manage this team")
-
+            status_code=403, detail="Not enough permissions to manage this team"
+        )
 
     await assign_user_to_team(
         session=session,
@@ -209,10 +218,13 @@ async def remove_user_from_team_service(
             detail="User is not in a team",
         )
 
-
-    if not can_remove_user_from_team(current_user=current_user, target_user=target_user):
+    if not can_remove_user_from_team(
+        current_user=current_user, target_user=target_user
+    ):
         raise HTTPException(
-            status_code=403, detail="Not enough permissions to remove user from this team")
+            status_code=403,
+            detail="Not enough permissions to remove user from this team",
+        )
 
     return await remove_user_from_team(
         session=session,

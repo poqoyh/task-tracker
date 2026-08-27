@@ -87,7 +87,7 @@ async def get_team(
         Depends(db_helper.session_getter),
     ],
     team_id: int,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     return await get_team_service(
         session=session,

@@ -15,6 +15,7 @@ from service.user_skills import (
     assign_skill_to_user_service,
     delete_user_skill_service,
     update_experience_months_service,
+    get_user_skills_service,
 )
 
 from crud_repositories.user_skill import get_users_skills
@@ -46,23 +47,28 @@ async def get_user_skills(
         Depends(db_helper.session_getter),
     ],
     user_id: int,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
-    return await get_users_skills(session=session, user_id=user_id)
+    return await get_user_skills_service(
+        session=session, user_id=user_id, current_user=current_user
+    )
 
 
 @router.post("/{user_id}/skills", response_model=UserReadWithSkills)
-async def add_skill_to_user(
+async def assign_skill_to_user(
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
     user_id: int,
     data: UserSkillCreate,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
     return await assign_skill_to_user_service(
-        session=session, user_id=user_id, data=data
+        session=session,
+        user_id=user_id,
+        data=data,
+        current_user=current_user,
     )
 
 
@@ -72,13 +78,14 @@ async def update_user_skill(
     user_id: int,
     skill_id: int,
     new_experience: int,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
     return await update_experience_months_service(
         session=session,
         user_id=user_id,
         new_experience=new_experience,
         skill_id=skill_id,
+        current_user=current_user,
     )
 
 
@@ -90,7 +97,12 @@ async def delete_user_skill(
     ],
     user_id: int,
     skill_id: int,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    current_user: User = Depends(get_current_user),
 ):
-    await delete_user_skill_service(session=session, user_id=user_id, skill_id=skill_id)
+    await delete_user_skill_service(
+        session=session,
+        user_id=user_id,
+        skill_id=skill_id,
+        current_user=current_user,
+    )
     return {"message": "Skill deleted successfully."}

@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,11 +10,25 @@ from crud_repositories.skill import (
     update_skill,
     get_skills,
     count_skills,
+    create_skill,
 )
 from crud_repositories.user_skill import skill_has_user
 from schemas.pagination import PaginatedResponse
 
-from schemas.skill import SkillUpdate, SkillShortRead
+from schemas.skill import SkillUpdate, SkillShortRead, SkillCreate
+
+
+async def create_skill_service(
+    session: AsyncSession,
+    creating_skill: SkillCreate,
+):
+    try:
+        return await create_skill(session=session, creating_skill=creating_skill)
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=409, detail="Skill with this name is already create"
+        )
 
 
 async def get_skills_service(
@@ -77,7 +92,13 @@ async def update_skill_service(
 
     data = update_data.model_dump(exclude_unset=True)
 
-    return await update_skill(session=session, skill=skill, update_data=data)
+    try:
+        return await update_skill(session=session, skill=skill, update_data=data)
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=409, detail="Skill with this name is already create"
+        )
 
 
 async def delete_skill_service(

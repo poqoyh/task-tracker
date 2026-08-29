@@ -18,16 +18,13 @@ from schemas.skill import (
     SkillUpdate,
 )
 
-from crud_repositories.skill import (
-    create_skill,
-)
-
 from service.skills import (
     delete_skill_service,
     get_skill_by_id_service,
     get_skill_by_name_service,
     update_skill_service,
     get_skills_service,
+    create_skill_service,
 )
 
 router = APIRouter(tags=["Skills"])
@@ -42,7 +39,7 @@ async def skill_create(
     creating_skill: SkillCreate,
     _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
-    return await create_skill(session=session, creating_skill=creating_skill)
+    return await create_skill_service(session=session, creating_skill=creating_skill)
 
 
 @router.get("/", response_model=PaginatedResponse[SkillShortRead])

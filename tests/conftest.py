@@ -203,3 +203,43 @@ async def create_task(admin_client):
         return response.json()
 
     return _create_task
+
+
+@pytest_asyncio.fixture
+async def create_skill(admin_client):
+    async def _create_skill(name: str = "Python"):
+        response = await admin_client.post("/api/skills/", json={"name": name})
+        assert response.status_code == 200, response.json()
+        return response.json()
+
+    return _create_skill
+
+
+@pytest_asyncio.fixture
+async def assign_skill_to_user(admin_client):
+    async def _assign_skill_to_user(
+        user_id: int,
+        skill_id: int,
+        experience_months: int = 12,
+    ):
+        response = await admin_client.post(
+            f"/api/user_skill/{user_id}/skills",
+            json={"skill_id": skill_id, "experience_months": experience_months},
+        )
+        assert response.status_code == 200, response.json()
+        return response.json()
+
+    return _assign_skill_to_user
+
+
+@pytest_asyncio.fixture
+async def same_team(session, create_team):
+    async def _same_team(*users: User, team_name: str = "Backend"):
+        team = await create_team(name=team_name, description=f"{team_name} team")
+        for user in users:
+            user.team_id = team["id"]
+        session.add_all(users)
+        await session.commit()
+        return team
+
+    return _same_team

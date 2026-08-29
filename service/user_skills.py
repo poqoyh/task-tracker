@@ -134,7 +134,7 @@ async def delete_user_skill_service(
     if skill is None:
         raise HTTPException(
             status_code=404,
-            detail="skill not found.",
+            detail="User doesn't have this skill.",
         )
 
     await delete_user_skill(session=session, skill=skill)

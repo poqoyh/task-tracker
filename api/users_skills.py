@@ -100,9 +100,6 @@ async def delete_user_skill(
     current_user: User = Depends(get_current_user),
 ):
     await delete_user_skill_service(
-        session=session,
-        user_id=user_id,
-        skill_id=skill_id,
-        current_user=current_user,
+        session=session, user_id=user_id, skill_id=skill_id, current_user=current_user
     )
     return {"message": "Skill deleted successfully."}

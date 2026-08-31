@@ -6,6 +6,7 @@ from fastapi import (
     APIRouter,
     Depends,
     Response,
+    Request,
 )
 
 from auth.dependencies import get_current_user, get_user_for_refresh_token, require_role
@@ -41,9 +42,13 @@ from schemas.user import (
 
 router = APIRouter(tags=["Users"])
 
+from core.rate_limit import limiter
+
 
 @router.post("/register")
+@limiter.limit("5/minute")
 async def register(
+    request: Request,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),
@@ -54,7 +59,9 @@ async def register(
 
 
 @router.post("/login")
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     session: Annotated[
         AsyncSession,
         Depends(db_helper.session_getter),

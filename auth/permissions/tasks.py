@@ -17,14 +17,9 @@ def can_manage_task(
         return True
 
     if current_user.role == UserRole.TEAM_LEAD:
-        if current_user.team_id is None:
+        if current_user.team_id is None or task.project_id is None:
             return False
-
-        if task.user is None:
-            return False
-
-        return current_user.team_id == task.user.team_id
-
+        return current_user.team_id == task.project.team_id
     return False
 
 

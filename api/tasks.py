@@ -8,15 +8,14 @@ from fastapi import (
 )
 
 from auth.dependencies import require_role, get_current_user
-from crud_repositories.task import create_task
 
 from db import db_helper
 from db.models import User
 from db.models.user import UserRole
 
 from schemas.pagination import PaginationParams, PaginatedResponse
-
 from schemas.tasks import TaskRead, TaskCreate, TaskUpdate
+
 from service.tasks import (
     get_task_by_id_service,
     update_task_service,
@@ -24,6 +23,7 @@ from service.tasks import (
     unassign_task_from_user_service,
     get_users_tasks_service,
     get_task_service,
+    create_task_service,
 )
 
 router = APIRouter(tags=["Tasks"])
@@ -35,10 +35,14 @@ async def create(
         AsyncSession,
         Depends(db_helper.session_getter),
     ],
-    task: TaskCreate,
-    _: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
+    creating_task: TaskCreate,
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.TEAM_LEAD)),
 ):
-    return await create_task(session=session, creating_task=task)
+    return await create_task_service(
+        session=session,
+        creating_task=creating_task,
+        current_user=current_user,
+    )
 
 
 @router.get("/", response_model=PaginatedResponse[TaskRead])

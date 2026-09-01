@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from auth.permissions.projects import can_manage_project
 from auth.permissions.tasks import can_manage_task, can_view_tasks, can_assign_task
 from auth.service import get_user_by_id_service
 from crud_repositories.task import (
@@ -11,10 +12,30 @@ from crud_repositories.task import (
     get_users_tasks,
     get_tasks,
     count_tasks,
+    create_task,
 )
 from db.models import Task, User
 from schemas.pagination import PaginatedResponse
-from schemas.tasks import TaskUpdate, TaskRead
+from schemas.tasks import TaskUpdate, TaskRead, TaskCreate
+from service.projects import get_project_by_id_service
+
+
+async def create_task_service(
+    session: AsyncSession,
+    creating_task: TaskCreate,
+    current_user: User,
+):
+    project = await get_project_by_id_service(
+        session=session, project_id=creating_task.project_id
+    )
+
+    if not can_manage_project(current_user=current_user, project=project):
+        raise HTTPException(
+            status_code=403,
+            detail="Not enough permissions to create tasks in this project",
+        )
+
+    return await create_task(session=session, creating_task=creating_task)
 
 
 async def get_task_service(

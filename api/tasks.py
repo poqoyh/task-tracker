@@ -107,7 +107,7 @@ async def update_task(
     )
 
 
-@router.post("/{task_id}/assign/{user_id}")
+@router.post("/{task_id}/assign/{user_id}", response_model=TaskRead)
 async def assign_task_to_user(
     session: Annotated[
         AsyncSession,

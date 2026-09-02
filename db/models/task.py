@@ -32,9 +32,7 @@ if TYPE_CHECKING:
 
 
 class Task(IntIDPKMixin, Base):
-    project_id: Mapped[int | None] = mapped_column(
-        ForeignKey("projects.id"), nullable=True
-    )
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), nullable=False)
 
     name: Mapped[str] = mapped_column(
         String(256),

@@ -40,7 +40,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name=op.f("pk_projects")),
         sa.UniqueConstraint("key", name=op.f("uq_projects_key")),
     )
-    op.add_column("tasks", sa.Column("project_id", sa.Integer(), nullable=True))
+    op.add_column("tasks", sa.Column("project_id", sa.Integer(), nullable=False))
     op.create_foreign_key(
         op.f("fk_tasks_project_id_projects"),
         "tasks",

@@ -28,5 +28,7 @@ class TaskRead(TaskBase):
 
     id: int
     project_id: int
+    task_number: int
+    human_id: str
     user_id: int | None
     created_at: datetime

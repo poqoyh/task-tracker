@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import String, func, ForeignKey
+from sqlalchemy import String, func, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.base import Base
@@ -32,7 +32,21 @@ if TYPE_CHECKING:
 
 
 class Task(IntIDPKMixin, Base):
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id",
+            "task_number",
+            name="uq_tasks_project_id_task_number",
+        ),
+    )
+
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), nullable=False)
+
+    task_number: Mapped[int] = mapped_column(nullable=False)
+
+    @property
+    def human_id(self) -> str:
+        return f"{self.project.key}-{self.task_number}"
 
     name: Mapped[str] = mapped_column(
         String(256),

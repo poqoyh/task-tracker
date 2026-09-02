@@ -2,21 +2,32 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from db.models import Task
+from db.models import Task, Project
 from schemas.tasks import TaskCreate
 
 
 async def create_task(
     session: AsyncSession,
     creating_task: TaskCreate,
+    project: Project,
 ) -> Task:
 
-    task = Task(**creating_task.model_dump())
+    result = await session.scalar(
+        select(func.max(Task.task_number)).where(Task.project_id == project.id)
+    )
+
+    task_number = (result or 0) + 1
+
+    task = Task(
+        **creating_task.model_dump(),
+        task_number=task_number,
+    )
+
+    task.project = project
 
     session.add(task)
 
     await session.commit()
-    await session.refresh(task)
 
     return task
 
@@ -27,7 +38,13 @@ async def get_tasks(
     offset: int,
 ) -> list[Task]:
 
-    stmt = select(Task).order_by(Task.created_at).limit(limit).offset(offset)
+    stmt = (
+        select(Task)
+        .options(selectinload(Task.project))
+        .order_by(Task.created_at)
+        .limit(limit)
+        .offset(offset)
+    )
 
     result = await session.scalars(stmt)
 
@@ -44,7 +61,12 @@ async def get_users_tasks(
     session: AsyncSession,
     user_id: int,
 ) -> list[Task]:
-    stmt = select(Task).where(Task.user_id == user_id).order_by(Task.created_at)
+    stmt = (
+        select(Task)
+        .options(selectinload(Task.project))
+        .where(Task.user_id == user_id)
+        .order_by(Task.created_at)
+    )
 
     result = await session.scalars(stmt)
     return result.all()

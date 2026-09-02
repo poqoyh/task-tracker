@@ -17,7 +17,7 @@ from crud_repositories.task import (
 from db.models import Task, User
 from schemas.pagination import PaginatedResponse
 from schemas.tasks import TaskUpdate, TaskRead, TaskCreate
-from service.projects import get_project_by_id_service
+from service.projects import get_project_by_id_service, get_project_for_update_service
 
 
 async def create_task_service(
@@ -25,7 +25,7 @@ async def create_task_service(
     creating_task: TaskCreate,
     current_user: User,
 ):
-    project = await get_project_by_id_service(
+    project = await get_project_for_update_service(
         session=session, project_id=creating_task.project_id
     )
 
@@ -35,7 +35,9 @@ async def create_task_service(
             detail="Not enough permissions to create tasks in this project",
         )
 
-    return await create_task(session=session, creating_task=creating_task)
+    return await create_task(
+        session=session, creating_task=creating_task, project=project
+    )
 
 
 async def get_task_service(

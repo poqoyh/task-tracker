@@ -8,16 +8,24 @@ Get task by id
 """
 
 
-async def test_get_task_by_id_unauthenticated(client, create_task):
-    task = await create_task()
+async def test_get_task_by_id_unauthenticated(
+    client, create_task, create_team, create_project
+):
+    team = await create_team()
+    project = await create_project(team_id=team["id"])
+    task = await create_task(project_id=project["id"])
 
     response = await client.get(f"/api/task/{task['id']}")
 
     assert response.status_code == 401
 
 
-async def test_get_task_by_id_worker_forbidden(worker_client, create_task):
-    task = await create_task()
+async def test_get_task_by_id_worker_forbidden(
+    worker_client, create_task, create_team, create_project
+):
+    team = await create_team()
+    project = await create_project(team_id=team["id"])
+    task = await create_task(project_id=project["id"])
 
     response = await worker_client.get(f"/api/task/{task['id']}")
 
@@ -34,8 +42,12 @@ async def test_worker_get_himself_tasks_success(
     worker_user,
     admin_client,
     create_task,
+    create_team,
+    create_project,
 ):
-    task = await create_task()
+    team = await create_team()
+    project = await create_project(team_id=team["id"])
+    task = await create_task(project_id=project["id"])
 
     await admin_client.post(f"/api/task/{task["id"]}/assign/{worker_user.id}")
 
@@ -56,8 +68,12 @@ async def test_worker_get_task_worker(
     second_worker_user,
     admin_client,
     create_task,
+    create_team,
+    create_project,
 ):
-    task = await create_task()
+    team = await create_team()
+    project = await create_project(team_id=team["id"])
+    task = await create_task(project_id=project["id"])
 
     await admin_client.post(f"/api/task/{task["id"]}/assign/{worker_user.id}")
 
@@ -78,8 +94,8 @@ async def test_team_lead_get_task_worker_in_his_team(
     admin_client,
     create_task,
     create_team,
+    create_project,
 ):
-    task = await create_task()
     team = await create_team()
 
     team_lead_user.team_id = team["id"]
@@ -87,6 +103,9 @@ async def test_team_lead_get_task_worker_in_his_team(
 
     session.add_all([team_lead_user, worker_user])
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+    task = await create_task(project_id=project["id"])
 
     await admin_client.post(f"/api/task/{task['id']}/assign/{worker_user.id}")
 
@@ -162,14 +181,17 @@ async def test_admin_get_task_success(
     admin_client,
     create_task,
     create_team,
+    create_project,
 ):
-    task = await create_task()
     team = await create_team()
 
     worker_user.team_id = team["id"]
 
     session.add(worker_user)
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+    task = await create_task(project_id=project["id"])
 
     await admin_client.post(f"/api/task/{task['id']}/assign/{worker_user.id}")
 
@@ -193,8 +215,13 @@ async def test_admin_update_task_success(
     session,
     admin_client,
     create_task,
+    create_project,
+    create_team,
 ):
-    task = await create_task()
+    team = await create_team()
+
+    project = await create_project(team_id=team["id"])
+    task = await create_task(project_id=project["id"])
 
     response = await admin_client.patch(
         f"/api/task/{task["id"]}",
@@ -217,15 +244,19 @@ async def test_team_lead_update_task_success(
     worker_user,
     create_team,
     create_task,
+    create_project,
 ):
     team = await create_team()
-    task = await create_task()
 
     team_lead_user.team_id = team["id"]
     worker_user.team_id = team["id"]
 
     session.add_all([team_lead_user, worker_user])
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     await team_lead_client.post(f"/api/task/{task['id']}/assign/{worker_user.id}")
 
@@ -251,20 +282,23 @@ async def test_team_lead_update_task_in_another_team(
     admin_client,
     create_team,
     create_task,
+    create_project,
 ):
     team = await create_team()
+
     team_2 = await create_team(
         name="Frontend",
         description="Frontend team",
     )
-
-    task = await create_task()
 
     team_lead_user.team_id = team["id"]
     worker_user.team_id = team_2["id"]
 
     session.add_all([team_lead_user, worker_user])
     await session.commit()
+
+    project = await create_project(team_id=team_2["id"])
+    task = await create_task(project_id=project["id"])
 
     await admin_client.post(f"/api/task/{task['id']}/assign/{worker_user.id}")
 
@@ -280,33 +314,58 @@ async def test_team_lead_update_task_in_another_team(
     assert body["detail"] == "Not enough permissions to update this task"
 
 
-async def test_team_lead_update_unappointed_task(
+async def test_team_lead_update_unassigned_task_in_own_project_success(
     session,
     team_lead_client,
     team_lead_user,
-    worker_user,
     create_team,
     create_task,
+    create_project,
 ):
+
     team = await create_team()
-    task = await create_task()
 
     team_lead_user.team_id = team["id"]
-    worker_user.team_id = team["id"]
 
-    session.add_all([team_lead_user, worker_user])
+    session.add(team_lead_user)
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+    task = await create_task(project_id=project["id"])
 
     response = await team_lead_client.patch(
         f"/api/task/{task["id"]}",
         json={"name": "Updated Task Name", "description": "Updated Task Description"},
     )
 
+    assert response.status_code == 200
+
+
+async def test_team_lead_update_unassigned_task_in_another_project_forbidden(
+    session,
+    team_lead_client,
+    team_lead_user,
+    create_team,
+    create_task,
+    create_project,
+):
+    team = await create_team()
+    team_2 = await create_team(name="Frontend", description="Frontend team")
+
+    team_lead_user.team_id = team["id"]
+
+    session.add(team_lead_user)
+    await session.commit()
+
+    project = await create_project(team_id=team_2["id"])
+
+    task = await create_task(project_id=project["id"])
+
+    response = await team_lead_client.patch(
+        f"/api/task/{task['id']}",
+        json={"name": "Updated Task Name", "description": "Updated Task Description"},
+    )
     assert response.status_code == 403
-
-    body = response.json()
-
-    assert body["detail"] == "Not enough permissions to update this task"
 
 
 async def test_team_lead_without_team_update_task(
@@ -317,14 +376,17 @@ async def test_team_lead_without_team_update_task(
     admin_client,
     create_team,
     create_task,
+    create_project,
 ):
     team = await create_team()
-    task = await create_task()
 
     worker_user.team_id = team["id"]
 
     session.add(worker_user)
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+    task = await create_task(project_id=project["id"])
 
     await admin_client.post(f"/api/task/{task['id']}/assign/{worker_user.id}")
 
@@ -347,14 +409,17 @@ async def test_worker_update_his_task(
     admin_client,
     create_team,
     create_task,
+    create_project,
 ):
     team = await create_team()
-    task = await create_task()
 
     worker_user.team_id = team["id"]
 
     session.add(worker_user)
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+    task = await create_task(project_id=project["id"])
 
     await admin_client.post(f"/api/task/{task['id']}/assign/{worker_user.id}")
 
@@ -376,11 +441,23 @@ Assign task to user
 
 
 async def test_test_admin_assign_task_to_user(
+    session,
     worker_user,
     admin_client,
     create_task,
+    create_project,
+    create_team,
 ):
-    task = await create_task()
+    team = await create_team()
+
+    worker_user.team_id = team["id"]
+
+    session.add(worker_user)
+    await session.commit()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     response = await admin_client.post(
         f"/api/task/{task['id']}/assign/{worker_user.id}"
@@ -401,8 +478,8 @@ async def test_team_lead_assign_task_to_worker(
     team_lead_user,
     create_task,
     create_team,
+    create_project,
 ):
-    task = await create_task()
     team = await create_team()
 
     team_lead_user.team_id = team["id"]
@@ -410,6 +487,10 @@ async def test_team_lead_assign_task_to_worker(
 
     session.add_all([team_lead_user, worker_user])
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     response = await team_lead_client.post(
         f"/api/task/{task['id']}/assign/{worker_user.id}"
@@ -430,8 +511,8 @@ async def test_team_lead_assign_task_to_worker_in_another_team(
     team_lead_user,
     create_task,
     create_team,
+    create_project,
 ):
-    task = await create_task()
 
     team = await create_team()
     team_2 = await create_team(name="Frontend", description="Frontend Team")
@@ -441,6 +522,10 @@ async def test_team_lead_assign_task_to_worker_in_another_team(
 
     session.add_all([team_lead_user, worker_user])
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     response = await team_lead_client.post(
         f"/api/task/{task['id']}/assign/{worker_user.id}"
@@ -459,8 +544,8 @@ async def test_team_lead_without_team_assign_task_to_worker(
     team_lead_client,
     create_task,
     create_team,
+    create_project,
 ):
-    task = await create_task()
 
     team = await create_team()
 
@@ -468,6 +553,10 @@ async def test_team_lead_without_team_assign_task_to_worker(
 
     session.add(worker_user)
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     response = await team_lead_client.post(
         f"/api/task/{task['id']}/assign/{worker_user.id}"
@@ -486,8 +575,8 @@ async def test_worker_assign_task(
     worker_user,
     create_task,
     create_team,
+    create_project,
 ):
-    task = await create_task()
 
     team = await create_team()
 
@@ -495,6 +584,10 @@ async def test_worker_assign_task(
 
     session.add(worker_user)
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     response = await worker_client.post(
         f"/api/task/{task['id']}/assign/{worker_user.id}"
@@ -513,8 +606,8 @@ async def test_admin_assign_task_that_has_already_been_assigned(
     worker_user,
     create_task,
     create_team,
+    create_project,
 ):
-    task = await create_task()
 
     team = await create_team()
 
@@ -522,6 +615,10 @@ async def test_admin_assign_task_that_has_already_been_assigned(
 
     session.add(worker_user)
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     first_response = await admin_client.post(
         f"/api/task/{task['id']}/assign/{worker_user.id}"
@@ -551,14 +648,19 @@ async def test_admin_unassign_task_to_worker(
     admin_client,
     create_task,
     create_team,
+    create_project,
 ):
-    task = await create_task()
+
     team = await create_team()
 
     worker_user.team_id = team["id"]
 
     session.add(worker_user)
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     assign_response = await admin_client.post(
         f"/api/task/{task['id']}/assign/{worker_user.id}"
@@ -583,8 +685,8 @@ async def test_team_lead_unassign_task_to_worker(
     team_lead_user,
     create_task,
     create_team,
+    create_project,
 ):
-    task = await create_task()
     team = await create_team()
 
     worker_user.team_id = team["id"]
@@ -592,6 +694,10 @@ async def test_team_lead_unassign_task_to_worker(
 
     session.add_all([team_lead_user, worker_user])
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     assign_response = await team_lead_client.post(
         f"/api/task/{task['id']}/assign/{worker_user.id}"
@@ -617,8 +723,8 @@ async def test_team_lead_unassign_task_to_worker_in_another_team(
     admin_client,
     create_task,
     create_team,
+    create_project,
 ):
-    task = await create_task()
 
     team = await create_team()
     team_2 = await create_team(
@@ -631,6 +737,10 @@ async def test_team_lead_unassign_task_to_worker_in_another_team(
 
     session.add_all([team_lead_user, worker_user])
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     assign_response = await admin_client.post(
         f"/api/task/{task['id']}/assign/{worker_user.id}"
@@ -650,8 +760,13 @@ async def test_team_lead_unassign_task_to_worker_in_another_team(
 async def test_admin_unassign_unappointed_task(
     admin_client,
     create_task,
+    create_project,
+    create_team,
 ):
-    task = await create_task()
+    team = await create_team()
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     response = await admin_client.patch(f"/api/task/{task['id']}/unassign")
 
@@ -669,8 +784,8 @@ async def test_team_lead_unassign_unappointed_task_to_worker(
     team_lead_user,
     create_task,
     create_team,
+    create_project,
 ):
-    task = await create_task()
 
     team = await create_team()
 
@@ -679,6 +794,10 @@ async def test_team_lead_unassign_unappointed_task_to_worker(
 
     session.add_all([team_lead_user, worker_user])
     await session.commit()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
 
     response = await team_lead_client.patch(f"/api/task/{task['id']}/unassign")
 

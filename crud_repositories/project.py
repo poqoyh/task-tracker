@@ -50,6 +50,18 @@ async def count_projects(session: AsyncSession) -> int:
     return result or 0
 
 
+async def get_project_for_update(
+    session: AsyncSession,
+    project_id: int,
+) -> Project | None:
+
+    stmt = select(Project).where(Project.id == project_id).with_for_update()
+
+    result = await session.execute(stmt)
+
+    return result.scalar_one_or_none()
+
+
 async def update_project(
     session: AsyncSession,
     project: Project,

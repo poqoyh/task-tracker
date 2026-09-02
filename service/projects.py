@@ -16,6 +16,7 @@ from crud_repositories.project import (
     get_projects,
     count_projects,
     update_project,
+    get_project_for_update,
 )
 
 from db.models import User
@@ -69,6 +70,24 @@ async def get_project_service(
     if not can_view_project(current_user=current_user, project=project):
         raise HTTPException(
             status_code=403, detail="Not enough permission to view this project"
+        )
+
+    return project
+
+
+async def get_project_for_update_service(
+    session: AsyncSession,
+    project_id: int,
+):
+    project = await get_project_for_update(
+        session=session,
+        project_id=project_id,
+    )
+
+    if project is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Project not found",
         )
 
     return project

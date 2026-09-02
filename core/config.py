@@ -19,6 +19,7 @@ class ApiPrefix(BaseModel):
     users_skills: str = "/user_skill"
     teams: str = "/team"
     tasks: str = "/task"
+    projects: str = "/project"
 
 
 class DataBaseConfig(BaseModel):

@@ -55,7 +55,11 @@ async def get_task_by_id(
     task_id: int,
 ) -> Task | None:
 
-    stmt = select(Task).options(selectinload(Task.user)).where(Task.id == task_id)
+    stmt = (
+        select(Task)
+        .options(selectinload(Task.user), selectinload(Task.project))
+        .where(Task.id == task_id)
+    )
 
     task = await session.scalars(stmt)
     return task.one_or_none()

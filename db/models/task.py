@@ -28,9 +28,14 @@ class TaskPriority(str, Enum):
 
 if TYPE_CHECKING:
     from db.models.user import User
+    from db.models.project import Project
 
 
 class Task(IntIDPKMixin, Base):
+    project_id: Mapped[int | None] = mapped_column(
+        ForeignKey("projects.id"), nullable=True
+    )
+
     name: Mapped[str] = mapped_column(
         String(256),
         nullable=False,
@@ -72,3 +77,5 @@ class Task(IntIDPKMixin, Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="tasks")
+
+    project: Mapped["Project"] = relationship(back_populates="tasks")

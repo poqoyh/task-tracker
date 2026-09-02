@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from db.models.user import User
+    from db.models.project import Project
 
 
 class Team(IntIDPKMixin, Base):
@@ -25,3 +26,4 @@ class Team(IntIDPKMixin, Base):
     )
 
     users: Mapped[list["User"]] = relationship(back_populates="team")
+    projects: Mapped[list["Project"]] = relationship(back_populates="team")

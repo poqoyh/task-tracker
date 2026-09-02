@@ -4,6 +4,7 @@ __all__ = (
     "UserSkill",
     "Team",
     "Task",
+    "Project",
 )
 
 
@@ -12,3 +13,4 @@ from .skill import Skill
 from .user_skill import UserSkill
 from .team import Team
 from .task import Task
+from .project import Project

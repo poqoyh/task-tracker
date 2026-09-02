@@ -192,13 +192,14 @@ async def create_team(admin_client):
 @pytest_asyncio.fixture
 async def create_task(admin_client):
     async def _create_task(
+        project_id: int,
         name: str = "Test task",
         description: str = "Test task description",
     ):
         response = await admin_client.post(
-            "/api/task/", json={"name": name, "description": description}
+            "/api/task/",
+            json={"name": name, "description": description, "project_id": project_id},
         )
-
         assert response.status_code == 200, response.json()
         return response.json()
 
@@ -243,3 +244,26 @@ async def same_team(session, create_team):
         return team
 
     return _same_team
+
+
+@pytest_asyncio.fixture
+async def create_project(admin_client):
+    async def _create_project(
+        name: str = "Backend Project",
+        key: str = "BKD",
+        team_id: int | None = None,
+        description: str = "Test project",
+    ):
+        response = await admin_client.post(
+            "/api/project/",
+            json={
+                "name": name,
+                "key": key,
+                "description": description,
+                "team_id": team_id,
+            },
+        )
+        assert response.status_code == 200, response.json()
+        return response.json()
+
+    return _create_project

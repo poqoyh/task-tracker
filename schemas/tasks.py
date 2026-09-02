@@ -13,7 +13,7 @@ class TaskBase(BaseModel):
 
 
 class TaskCreate(TaskBase):
-    pass
+    project_id: int
 
 
 class TaskUpdate(BaseModel):
@@ -27,5 +27,6 @@ class TaskRead(TaskBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    project_id: int
     user_id: int | None
     created_at: datetime

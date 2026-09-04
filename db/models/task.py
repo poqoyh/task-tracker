@@ -44,6 +44,11 @@ class Task(IntIDPKMixin, Base):
 
     task_number: Mapped[int] = mapped_column(nullable=False)
 
+    parent_task_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tasks.id"),
+        nullable=True,
+    )
+
     @property
     def human_id(self) -> str:
         return f"{self.project.key}-{self.task_number}"
@@ -91,3 +96,12 @@ class Task(IntIDPKMixin, Base):
     user: Mapped["User"] = relationship(back_populates="tasks")
 
     project: Mapped["Project"] = relationship(back_populates="tasks")
+
+    parent_task: Mapped["Task | None"] = relationship(
+        remote_side="Task.id",
+        back_populates="subtasks",
+    )
+
+    subtasks: Mapped[list["Task"]] = relationship(
+        back_populates="parent_task",
+    )

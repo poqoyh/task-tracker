@@ -20,9 +20,10 @@ from crud_repositories.task import (
     create_task,
 )
 from db.models import Task, User
+from db.models.task import TaskStatus
 from schemas.pagination import PaginatedResponse
 from schemas.tasks import TaskUpdate, TaskRead, TaskCreate
-from service.projects import get_project_by_id_service, get_project_for_update_service
+from service.projects import get_project_for_update_service
 
 
 async def create_task_service(
@@ -39,6 +40,17 @@ async def create_task_service(
             status_code=403,
             detail="Not enough permissions to create tasks in this project",
         )
+    if creating_task.parent_task_id is not None:
+        parent_task = await get_task_by_id_service(
+            session=session,
+            task_id=creating_task.parent_task_id,
+        )
+
+        if parent_task.project_id != project.id:
+            raise HTTPException(
+                status_code=409,
+                detail="Parent task must belong to the same project",
+            )
 
     return await create_task(
         session=session, creating_task=creating_task, project=project
@@ -117,7 +129,17 @@ async def update_task_service(
     ):
         raise HTTPException(
             status_code=409,
-            detail=f"Cannot transition task from {task.status} to {update_data["status"]}",
+            detail=f"Cannot transition task from {task.status} to {update_data['status']}",
+        )
+
+    if (
+        "status" in update_data
+        and update_data["status"] == TaskStatus.DONE
+        and any(subtask.status != TaskStatus.DONE for subtask in task.subtasks)
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot complete task while it has unfinished subtasks",
         )
 
     return await update_task(

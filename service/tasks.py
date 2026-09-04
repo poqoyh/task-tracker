@@ -2,7 +2,12 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.permissions.projects import can_manage_project
-from auth.permissions.tasks import can_manage_task, can_view_tasks, can_assign_task
+from auth.permissions.tasks import (
+    can_manage_task,
+    can_view_tasks,
+    can_assign_task,
+    validate_status_transition,
+)
 from auth.service import get_user_by_id_service
 from crud_repositories.task import (
     get_task_by_id,
@@ -106,6 +111,14 @@ async def update_task_service(
         )
 
     update_data = task_update.model_dump(exclude_unset=True)
+
+    if "status" in update_data and not validate_status_transition(
+        task.status, update_data["status"]
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Cannot transition task from {task.status} to {update_data["status"]}",
+        )
 
     return await update_task(
         session=session,

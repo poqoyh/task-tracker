@@ -2,6 +2,7 @@ from db.models import (
     User,
     Task,
 )
+from db.models.task import TaskStatus
 from db.models.user import UserRole
 
 """
@@ -67,3 +68,20 @@ def can_assign_task(
         return current_user.team_id == target_user.team_id
 
     return False
+
+
+"""
+Update task status
+"""
+ALLOWED_TRANSITIONS: dict[TaskStatus, set[TaskStatus]] = {
+    TaskStatus.CREATED: {TaskStatus.IN_PROGRESS},
+    TaskStatus.IN_PROGRESS: {TaskStatus.REVIEW, TaskStatus.CREATED},
+    TaskStatus.REVIEW: {TaskStatus.DONE, TaskStatus.IN_PROGRESS},
+    TaskStatus.DONE: {TaskStatus.IN_PROGRESS},  # explicit "reopen", not to CREATED
+}
+
+
+def validate_status_transition(old: TaskStatus, new: TaskStatus) -> bool:
+    if old == new:
+        return True
+    return new in ALLOWED_TRANSITIONS.get(old, set())

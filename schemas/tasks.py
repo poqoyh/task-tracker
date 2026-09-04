@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from db.models.task import TaskStatus, TaskPriority
 
@@ -14,6 +14,7 @@ class TaskBase(BaseModel):
 
 class TaskCreate(TaskBase):
     project_id: int
+    parent_task_id: int | None = None
 
 
 class TaskUpdate(BaseModel):
@@ -32,3 +33,7 @@ class TaskRead(TaskBase):
     human_id: str
     user_id: int | None
     created_at: datetime
+    subtasks: list["TaskRead"] = Field(default_factory=list)
+
+
+TaskRead.model_rebuild()

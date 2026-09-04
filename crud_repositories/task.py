@@ -29,7 +29,18 @@ async def create_task(
 
     await session.commit()
 
-    return task
+    stmt = (
+        select(Task)
+        .options(
+            selectinload(Task.project),
+            selectinload(Task.subtasks),
+        )
+        .where(Task.id == task.id)
+    )
+
+    result = await session.scalars(stmt)
+
+    return result.one()
 
 
 async def get_tasks(
@@ -40,7 +51,10 @@ async def get_tasks(
 
     stmt = (
         select(Task)
-        .options(selectinload(Task.project))
+        .options(
+            selectinload(Task.project),
+            selectinload(Task.subtasks),
+        )
         .order_by(Task.created_at)
         .limit(limit)
         .offset(offset)
@@ -63,7 +77,10 @@ async def get_users_tasks(
 ) -> list[Task]:
     stmt = (
         select(Task)
-        .options(selectinload(Task.project))
+        .options(
+            selectinload(Task.project),
+            selectinload(Task.subtasks),
+        )
         .where(Task.user_id == user_id)
         .order_by(Task.created_at)
     )
@@ -79,7 +96,11 @@ async def get_task_by_id(
 
     stmt = (
         select(Task)
-        .options(selectinload(Task.user), selectinload(Task.project))
+        .options(
+            selectinload(Task.user),
+            selectinload(Task.project),
+            selectinload(Task.subtasks),
+        )
         .where(Task.id == task_id)
     )
 

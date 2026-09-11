@@ -68,7 +68,7 @@ async def get_label_by_id(
     return await get_label_by_id_service(session=session, label_id=label_id)
 
 
-@router.patch("/{skill_id}/", response_model=LabelRead)
+@router.patch("/{label_id}/", response_model=LabelRead)
 async def update_label(
     session: Annotated[
         AsyncSession,

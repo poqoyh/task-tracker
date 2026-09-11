@@ -33,7 +33,6 @@ class TaskRead(TaskBase):
     human_id: str
     user_id: int | None
     created_at: datetime
-    subtasks: list["TaskRead"] = Field(default_factory=list)
 
 
 TaskRead.model_rebuild()

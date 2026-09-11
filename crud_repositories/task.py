@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from db.models import Task, Project
+from db.models.task import TaskStatus
 from schemas.tasks import TaskCreate
 
 
@@ -99,7 +100,6 @@ async def get_task_by_id(
         .options(
             selectinload(Task.user),
             selectinload(Task.project),
-            selectinload(Task.subtasks),
             selectinload(Task.labels),
         )
         .where(Task.id == task_id)
@@ -147,3 +147,21 @@ async def unassign_task(
     await session.refresh(task)
 
     return task
+
+
+async def has_unfinished_subtasks(
+    session: AsyncSession,
+    task_id: int,
+) -> bool:
+    stmt = (
+        select(Task.id)
+        .where(
+            Task.parent_task_id == task_id,
+            Task.status != TaskStatus.DONE,
+        )
+        .limit(1)
+    )
+
+    result = await session.scalar(stmt)
+
+    return result is not None

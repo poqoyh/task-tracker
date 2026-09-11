@@ -806,3 +806,360 @@ async def test_team_lead_unassign_unappointed_task_to_worker(
     body = response.json()
 
     assert body["detail"] == "Task is not assigned."
+
+
+"""
+SUBTASK
+"""
+
+
+async def test_create_subtask_success(
+    admin_client,
+    create_task,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+    project = await create_project(team_id=team["id"])
+
+    parent = await create_task(project_id=project["id"])
+
+    response = await admin_client.post(
+        "/api/task/",
+        json={
+            "name": "Child task",
+            "project_id": project["id"],
+            "parent_task_id": parent["id"],
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["name"] == "Child task"
+    assert body["project_id"] == project["id"]
+
+
+async def test_create_subtask_parent_from_another_project_409(
+    admin_client,
+    create_task,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+
+    project_a = await create_project(
+        team_id=team["id"],
+        key="AAA",
+    )
+
+    project_b = await create_project(
+        team_id=team["id"],
+        key="BBB",
+        name="Second project",
+    )
+
+    parent = await create_task(project_id=project_a["id"])
+
+    response = await admin_client.post(
+        "/api/task/",
+        json={
+            "name": "Invalid child",
+            "project_id": project_b["id"],
+            "parent_task_id": parent["id"],
+        },
+    )
+
+    assert response.status_code == 409
+
+    assert response.json()["detail"] == ("Parent task must belong to the same project")
+
+
+async def test_create_subtask_parent_not_found(
+    admin_client,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+
+    project = await create_project(team_id=team["id"])
+
+    response = await admin_client.post(
+        "/api/task/",
+        json={
+            "name": "Invalid child",
+            "project_id": project["id"],
+            "parent_task_id": 999,
+        },
+    )
+
+    assert response.status_code == 404
+
+
+async def test_parent_cannot_be_done_with_unfinished_subtask(
+    admin_client,
+    create_task,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+
+    project = await create_project(team_id=team["id"])
+
+    parent = await create_task(project_id=project["id"])
+
+    child_response = await admin_client.post(
+        "/api/task/",
+        json={
+            "name": "Child task",
+            "project_id": project["id"],
+            "parent_task_id": parent["id"],
+        },
+    )
+
+    assert child_response.status_code == 200
+
+    await admin_client.patch(
+        f"/api/task/{parent['id']}",
+        json={"status": "in_progress"},
+    )
+
+    await admin_client.patch(
+        f"/api/task/{parent['id']}",
+        json={"status": "review"},
+    )
+
+    response = await admin_client.patch(
+        f"/api/task/{parent['id']}",
+        json={"status": "done"},
+    )
+
+    assert response.status_code == 409
+
+    assert response.json()["detail"] == (
+        "Cannot complete task while it has unfinished subtasks"
+    )
+
+
+async def test_parent_can_be_done_when_all_subtasks_done(
+    admin_client,
+    create_task,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+
+    project = await create_project(team_id=team["id"])
+
+    parent = await create_task(project_id=project["id"])
+
+    child_response = await admin_client.post(
+        "/api/task/",
+        json={
+            "name": "Child task",
+            "project_id": project["id"],
+            "parent_task_id": parent["id"],
+        },
+    )
+
+    assert child_response.status_code == 200
+
+    child_id = child_response.json()["id"]
+
+    await admin_client.patch(
+        f"/api/task/{child_id}",
+        json={"status": "in_progress"},
+    )
+
+    await admin_client.patch(
+        f"/api/task/{child_id}",
+        json={"status": "review"},
+    )
+
+    response = await admin_client.patch(
+        f"/api/task/{child_id}",
+        json={"status": "done"},
+    )
+
+    assert response.status_code == 200
+
+    await admin_client.patch(
+        f"/api/task/{parent['id']}",
+        json={"status": "in_progress"},
+    )
+
+    await admin_client.patch(
+        f"/api/task/{parent['id']}",
+        json={"status": "review"},
+    )
+
+    response = await admin_client.patch(
+        f"/api/task/{parent['id']}",
+        json={"status": "done"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "done"
+
+
+async def test_add_label_to_task_success(
+    admin_client,
+    create_task,
+    create_label,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
+
+    label = await create_label()
+
+    response = await admin_client.post(
+        f"/api/task/{task['id']}/add_label/{label['id']}"
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == task["id"]
+
+
+async def test_add_same_label_to_task_409(
+    admin_client,
+    create_task,
+    create_label,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
+
+    label = await create_label()
+
+    response = await admin_client.post(
+        f"/api/task/{task['id']}/add_label/{label['id']}"
+    )
+
+    assert response.status_code == 200
+
+    response = await admin_client.post(
+        f"/api/task/{task['id']}/add_label/{label['id']}"
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == ("Label already added to this task.")
+
+
+async def test_add_nonexistent_label_to_task_404(
+    admin_client,
+    create_task,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
+
+    response = await admin_client.post(f"/api/task/{task['id']}/add_label/999")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Label not found"
+
+
+async def test_remove_label_from_task_success(
+    admin_client,
+    create_task,
+    create_label,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
+
+    label = await create_label()
+
+    await admin_client.post(f"/api/task/{task['id']}/add_label/{label['id']}")
+
+    response = await admin_client.delete(
+        f"/api/task/{task['id']}/remove_label/{label['id']}"
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == task["id"]
+
+
+async def test_remove_label_not_attached_404(
+    admin_client,
+    create_task,
+    create_label,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
+
+    label = await create_label()
+
+    response = await admin_client.delete(
+        f"/api/task/{task['id']}/remove_label/{label['id']}"
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == ("Task doesn't have this label")
+
+
+async def test_worker_add_label_to_task_forbidden(
+    worker_client,
+    create_task,
+    create_label,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
+
+    label = await create_label()
+
+    response = await worker_client.post(
+        f"/api/task/{task['id']}/add_label/{label['id']}"
+    )
+
+    assert response.status_code == 403
+
+
+async def test_worker_remove_label_from_task_forbidden(
+    worker_client,
+    create_task,
+    create_label,
+    create_team,
+    create_project,
+):
+    team = await create_team()
+
+    project = await create_project(team_id=team["id"])
+
+    task = await create_task(project_id=project["id"])
+
+    label = await create_label()
+
+    response = await worker_client.delete(
+        f"/api/task/{task['id']}/remove_label/{label['id']}"
+    )
+
+    assert response.status_code == 403

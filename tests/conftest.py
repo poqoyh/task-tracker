@@ -267,3 +267,18 @@ async def create_project(admin_client):
         return response.json()
 
     return _create_project
+
+
+@pytest_asyncio.fixture
+async def create_label(admin_client):
+    async def _create_label(name: str = "backend"):
+        response = await admin_client.post(
+            "/api/labels/",
+            json={"name": name},
+        )
+
+        assert response.status_code == 200, response.json()
+
+        return response.json()
+
+    return _create_label

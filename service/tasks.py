@@ -18,6 +18,7 @@ from crud_repositories.task import (
     get_tasks,
     count_tasks,
     create_task,
+    has_unfinished_subtasks,
 )
 from db.models import Task, User
 from db.models.task import TaskStatus
@@ -133,15 +134,17 @@ async def update_task_service(
             detail=f"Cannot transition task from {task.status} to {update_data['status']}",
         )
 
-    if (
-        "status" in update_data
-        and update_data["status"] == TaskStatus.DONE
-        and any(subtask.status != TaskStatus.DONE for subtask in task.subtasks)
-    ):
-        raise HTTPException(
-            status_code=409,
-            detail="Cannot complete task while it has unfinished subtasks",
+    if task_update.status == TaskStatus.DONE:
+        has_unfinished = await has_unfinished_subtasks(
+            session,
+            task.id,
         )
+
+        if has_unfinished:
+            raise HTTPException(
+                status_code=409,
+                detail="Cannot complete task while it has unfinished subtasks",
+            )
 
     return await update_task(
         session=session,

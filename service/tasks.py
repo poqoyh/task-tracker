@@ -244,15 +244,17 @@ async def add_label_to_task_service(
 
 
 async def remove_label_from_task_service(
-        session: AsyncSession,
-        task_id: int,
-        label_id: int,
-        current_user: User,
+    session: AsyncSession,
+    task_id: int,
+    label_id: int,
+    current_user: User,
 ):
     task = await get_task_by_id_service(session=session, task_id=task_id)
 
-    if not can_manage_task(current_user=current_user,task=task):
-        raise HTTPException(status_code=403, detail="Not enough permissions to update this task")
+    if not can_manage_task(current_user=current_user, task=task):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to update this task"
+        )
 
     label = await get_label_by_id_service(session=session, label_id=label_id)
 

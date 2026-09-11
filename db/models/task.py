@@ -29,6 +29,7 @@ class TaskPriority(str, Enum):
 if TYPE_CHECKING:
     from db.models.user import User
     from db.models.project import Project
+    from db.models.label import Label
 
 
 class Task(IntIDPKMixin, Base):
@@ -104,4 +105,8 @@ class Task(IntIDPKMixin, Base):
 
     subtasks: Mapped[list["Task"]] = relationship(
         back_populates="parent_task",
+    )
+
+    labels: Mapped[list["Label"]] = relationship(
+        secondary="task_labels", back_populates="tasks"
     )

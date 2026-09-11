@@ -20,6 +20,7 @@ class ApiPrefix(BaseModel):
     teams: str = "/team"
     tasks: str = "/task"
     projects: str = "/project"
+    labels: str = "/labels"
 
 
 class DataBaseConfig(BaseModel):

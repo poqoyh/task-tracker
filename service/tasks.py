@@ -23,6 +23,7 @@ from db.models import Task, User
 from db.models.task import TaskStatus
 from schemas.pagination import PaginatedResponse
 from schemas.tasks import TaskUpdate, TaskRead, TaskCreate
+from service.label import get_label_by_id_service
 from service.projects import get_project_for_update_service
 
 
@@ -205,3 +206,62 @@ async def unassign_task_from_user_service(
         )
 
     return await unassign_task(session=session, task=task)
+
+
+"""
+LABEL
+"""
+
+
+async def add_label_to_task_service(
+    session: AsyncSession,
+    task_id: int,
+    label_id: int,
+    current_user: User,
+):
+
+    task = await get_task_by_id_service(session=session, task_id=task_id)
+
+    if not can_manage_task(current_user=current_user, task=task):
+        raise HTTPException(
+            status_code=403, detail="Not enough permissions to update this task"
+        )
+
+    label = await get_label_by_id_service(session=session, label_id=label_id)
+
+    if label in task.labels:
+        raise HTTPException(
+            status_code=409,
+            detail="Label already added to this task.",
+        )
+
+    task.labels.append(label)
+
+    await session.commit()
+    await session.refresh(task)
+
+    return task
+
+
+async def remove_label_from_task_service(
+        session: AsyncSession,
+        task_id: int,
+        label_id: int,
+        current_user: User,
+):
+    task = await get_task_by_id_service(session=session, task_id=task_id)
+
+    if not can_manage_task(current_user=current_user,task=task):
+        raise HTTPException(status_code=403, detail="Not enough permissions to update this task")
+
+    label = await get_label_by_id_service(session=session, label_id=label_id)
+
+    if label not in task.labels:
+        raise HTTPException(status_code=404, detail="Task doesn't have this label")
+
+    task.labels.remove(label)
+
+    await session.commit()
+    await session.refresh(task)
+
+    return task

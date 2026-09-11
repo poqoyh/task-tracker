@@ -100,6 +100,7 @@ async def get_task_by_id(
             selectinload(Task.user),
             selectinload(Task.project),
             selectinload(Task.subtasks),
+            selectinload(Task.labels),
         )
         .where(Task.id == task_id)
     )

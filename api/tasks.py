@@ -24,6 +24,8 @@ from service.tasks import (
     get_users_tasks_service,
     get_task_service,
     create_task_service,
+    add_label_to_task_service,
+    remove_label_from_task_service,
 )
 
 router = APIRouter(tags=["Tasks"])
@@ -122,6 +124,43 @@ async def assign_task_to_user(
         session=session,
         task_id=task_id,
         user_id=user_id,
+        current_user=current_user,
+    )
+
+
+@router.post("/{task_id}/add_label/{label_id}")
+async def add_label_to_task(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    task_id: int,
+    label_id: int,
+    current_user: User = Depends(get_current_user),
+):
+    return await add_label_to_task_service(
+        session=session,
+        task_id=task_id,
+        label_id=label_id,
+        current_user=current_user,
+    )
+
+
+@router.delete("/{task_id}/remove_label/{label_id}")
+async def remove_label_from_task(
+    session: Annotated[
+        AsyncSession,
+        Depends(db_helper.session_getter),
+    ],
+    task_id: int,
+    label_id: int,
+    current_user: User = Depends(get_current_user),
+):
+
+    return await remove_label_from_task_service(
+        session=session,
+        task_id=task_id,
+        label_id=label_id,
         current_user=current_user,
     )
 

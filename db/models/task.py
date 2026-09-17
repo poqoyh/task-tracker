@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from db.models.user import User
     from db.models.project import Project
     from db.models.label import Label
+    from db.models.comment import Comment
 
 
 class Task(IntIDPKMixin, Base):
@@ -110,3 +111,5 @@ class Task(IntIDPKMixin, Base):
     labels: Mapped[list["Label"]] = relationship(
         secondary="task_labels", back_populates="tasks"
     )
+
+    comments: Mapped[list["Comment"]] = relationship(back_populates="task")

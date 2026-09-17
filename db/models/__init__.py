@@ -7,6 +7,7 @@ __all__ = (
     "Project",
     "Label",
     "TaskLabel",
+    "Comment",
 )
 
 
@@ -18,3 +19,4 @@ from .task import Task
 from .project import Project
 from .label import Label
 from .task_label import TaskLabel
+from .comment import Comment

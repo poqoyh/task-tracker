@@ -22,6 +22,7 @@ class UserRole(str, Enum):
 if TYPE_CHECKING:
     from db.models.team import Team
     from db.models.task import Task
+    from db.models.comment import Comment
 
 
 class User(IntIDPKMixin, Base):
@@ -69,3 +70,5 @@ class User(IntIDPKMixin, Base):
     team: Mapped["Team"] = relationship(back_populates="users")
 
     tasks: Mapped[list["Task"]] = relationship(back_populates="user")
+
+    comments: Mapped[list["Comment"]] = relationship(back_populates="user")

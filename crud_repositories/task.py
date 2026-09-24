@@ -99,7 +99,7 @@ async def get_task_by_id(
         select(Task)
         .options(
             selectinload(Task.user),
-            selectinload(Task.project),
+            selectinload(Task.project).selectinload(Project.team),
             selectinload(Task.labels),
         )
         .where(Task.id == task_id)

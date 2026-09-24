@@ -21,6 +21,7 @@ class ApiPrefix(BaseModel):
     tasks: str = "/task"
     projects: str = "/project"
     labels: str = "/labels"
+    comments: str = "/comments"
 
 
 class DataBaseConfig(BaseModel):

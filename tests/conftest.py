@@ -282,3 +282,27 @@ async def create_label(admin_client):
         return response.json()
 
     return _create_label
+
+
+@pytest_asyncio.fixture
+async def create_comment(admin_client):
+    async def _create_comment(
+        task_id: int,
+        text: str = "Test comment",
+    ):
+        response = await admin_client.post(
+            f"/api/comments/tasks/{task_id}/comments",
+            json={"text": text},
+        )
+
+        assert response.status_code == 200, response.json()
+        return response.json()
+
+    return _create_comment
+
+
+@pytest_asyncio.fixture
+async def authenticated_client(client):
+    def _create(user: User):
+        return AuthenticatedClient(client, user)
+    return _create

@@ -12,6 +12,7 @@ async def test_create_comment_unauthenticated(
     client, create_task, create_team, create_project
 ):
     team = await create_team()
+
     project = await create_project(team_id=team["id"])
     task = await create_task(project_id=project["id"])
 
@@ -680,9 +681,7 @@ async def test_worker_delete_other_comment_forbidden(
     # Try to delete as second worker
     second_worker_client = authenticated_client(second_worker_user)
 
-    response = await second_worker_client.delete(
-        f"/api/comments/comments/{comment_id}"
-    )
+    response = await second_worker_client.delete(f"/api/comments/comments/{comment_id}")
 
     assert response.status_code == 403
 

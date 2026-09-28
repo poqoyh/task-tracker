@@ -305,4 +305,5 @@ async def create_comment(admin_client):
 async def authenticated_client(client):
     def _create(user: User):
         return AuthenticatedClient(client, user)
+
     return _create

@@ -24,7 +24,9 @@ async def create_comment(
     stmt = (
         select(Comment)
         .options(
-            selectinload(Comment.task).selectinload(Task.project).selectinload(Project.team),
+            selectinload(Comment.task)
+            .selectinload(Task.project)
+            .selectinload(Project.team),
             selectinload(Comment.user),
         )
         .where(Comment.id == comment.id)
@@ -43,7 +45,9 @@ async def get_comments_by_task(
     stmt = (
         select(Comment)
         .options(
-            selectinload(Comment.task).selectinload(Task.project).selectinload(Project.team),
+            selectinload(Comment.task)
+            .selectinload(Task.project)
+            .selectinload(Project.team),
             selectinload(Comment.user),
         )
         .where(Comment.task_id == task_id)
@@ -73,7 +77,9 @@ async def get_comment_by_id(
     stmt = (
         select(Comment)
         .options(
-            selectinload(Comment.task).selectinload(Task.project).selectinload(Project.team),
+            selectinload(Comment.task)
+            .selectinload(Task.project)
+            .selectinload(Project.team),
             selectinload(Comment.user),
         )
         .where(Comment.id == comment_id)
